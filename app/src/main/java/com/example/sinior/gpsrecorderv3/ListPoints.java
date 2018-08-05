@@ -1,12 +1,24 @@
 package com.example.sinior.gpsrecorderv3;
 
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.ListView;
+
+import com.example.sinior.gpsrecorderv3.Adapter.PointsAdapter;
+import com.example.sinior.gpsrecorderv3.BDD.PointsBDD;
+import com.example.sinior.gpsrecorderv3.Beans.Point;
+
+import java.util.ArrayList;
+import java.util.Collections;
 
 
 /**
@@ -17,7 +29,7 @@ import android.view.ViewGroup;
  * Use the {@link ListPoints#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ListPoints extends Fragment {
+public class ListPoints extends Fragment implements View.OnClickListener  {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -27,7 +39,14 @@ public class ListPoints extends Fragment {
     private String mParam1;
     private String mParam2;
 
+    ListView lvPoints;
+    public ArrayList<Point> pointsList;
+    PointsAdapter adapter;
+    Button imgAddPoint, imgDeleteAll;
+
     private OnFragmentInteractionListener mListener;
+
+    FragmentTransaction frgmtTrans;
 
     public ListPoints() {
         // Required empty public constructor
@@ -64,7 +83,42 @@ public class ListPoints extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_list_points, container, false);
+        View view = inflater.inflate(R.layout.fragment_list_points, container, false);
+        lvPoints = (ListView) view.findViewById(R.id.lvPoints);
+        imgAddPoint = (Button) view.findViewById(R.id.btnAddPoint);
+        imgDeleteAll = (Button) view.findViewById(R.id.btnDeleteAll);
+        imgAddPoint.setOnClickListener(this);
+        imgDeleteAll.setOnClickListener(this);
+        final PointsBDD pointsBDD = new PointsBDD(getActivity());
+        pointsBDD.open();
+        pointsList = pointsBDD.getAllPoint();
+        adapter = new PointsAdapter(getActivity(), pointsList);
+        lvPoints.setAdapter(adapter);
+        pointsBDD.close();
+        return view;
+    }
+
+
+    @Override
+    public void onClick(View view) {
+        //creating fragment object
+        android.app.Fragment fragment = null;
+        switch (view.getId()){
+            case R.id.btnAddPoint:
+                fragment = new AddPoint();
+                break;
+            case R.id.btnDeleteAll:
+                fragment = new ListPoints();
+                break;
+
+        }
+        //replacing the fragment
+        if (fragment != null) {
+            final FragmentManager fragmentManager = getFragmentManager();
+            frgmtTrans = fragmentManager.beginTransaction();
+            frgmtTrans.replace(R.id.content_frame, fragment);
+            frgmtTrans.commit();
+        }
     }
 
     // TODO: Rename method, update argument and hook method into UI event

@@ -23,6 +23,7 @@ public class MyLocation {
     boolean gps_enabled = false;
     boolean network_enabled = false;
 
+
     public boolean getLocation(Context context, LocationResult result) {
         //I use LocationResult callback class to pass location value from MyLocation to user code.
         locationResult = result;

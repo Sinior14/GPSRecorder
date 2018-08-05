@@ -86,8 +86,10 @@ public class MenuFragment extends Fragment implements View.OnClickListener  {
         View view =inflater.inflate(R.layout.fragment_menu, container, false);
         tvExit= (TextView) view.findViewById(R.id.tvExit);
         tvCurrentPlace= (TextView) view.findViewById(R.id.tvCurrentPlace);
+        tvListPoints = (TextView) view.findViewById(R.id.tvListPointsMenu);
 
         tvCurrentPlace.setOnClickListener(this);
+        tvListPoints.setOnClickListener(this);
 
         return view;
     }
@@ -124,7 +126,12 @@ public class MenuFragment extends Fragment implements View.OnClickListener  {
             case R.id.tvCurrentPlace:
                 fragment = new MapFragement();
                 break;
-
+            case R.id.tvListPointsMenu:
+                fragment = new ListPoints();
+                break;
+            case R.id.btnListPointsMenu:
+                fragment = new ListPoints();
+                break;
         }
         //replacing the fragment
         if (fragment != null) {
