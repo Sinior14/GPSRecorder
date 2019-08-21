@@ -1,24 +1,24 @@
 package com.example.sinior.gpsrecorderv3;
 
-import android.content.Context;
-import android.content.pm.PackageManager;
+import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
-import android.net.Uri;
+import android.location.LocationManager;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.app.Fragment;
-import android.util.Log;
-import android.view.InflateException;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.example.sinior.gpsrecorderv3.Adapter.PointsAdapter;
+import com.example.sinior.gpsrecorderv3.BDD.PointsBDD;
 import com.example.sinior.gpsrecorderv3.Beans.Point;
 import com.example.sinior.gpsrecorderv3.Tools.GpsTracker;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -30,28 +30,39 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CustomCap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
+import androidx.annotation.Nullable;
 
-public class MapFragement  extends Fragment implements LocationListener, OnMapReadyCallback {
+
+public class MapFragement extends Fragment implements LocationListener, OnMapReadyCallback {
     private GoogleMap mMap;
     private GpsTracker gpsTracker;
     public static Point point;
     public static Point currentLocation;
+    public static boolean multiView;
     private ArrayList<Point> listPoints = new ArrayList<Point>();
+    LocationManager locationManager;
+    Marker currentLocationMarker;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_map_fragement, container,false);
+        setHasOptionsMenu(true);
+        return inflater.inflate(R.layout.fragment_map_fragement, container, false);
     }
 
     @Override
@@ -60,7 +71,7 @@ public class MapFragement  extends Fragment implements LocationListener, OnMapRe
 
         MapFragment fragment = null;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            fragment = (MapFragment)getChildFragmentManager().findFragmentById(R.id.map);
+            fragment = (MapFragment) getChildFragmentManager().findFragmentById(R.id.map);
         }
         fragment.getMapAsync(this);
         // Setting a click event handler for the map
@@ -69,20 +80,59 @@ public class MapFragement  extends Fragment implements LocationListener, OnMapRe
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.point_menu, menu);
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int itemId = item.getItemId();
+
+        if (itemId == R.id.drawPolyline) {
+
+            if (getArguments() != null && getArguments().getBoolean("multiRoutes")) {
+                final PointsBDD pointsBDD = new PointsBDD(getActivity());
+                pointsBDD.open();
+                this.drawPolyline(pointsBDD.getAllPoint());
+                pointsBDD.close();
+            } else if (point != null) {
+                this.drawPolyline(listPoints);
+            }
+        }else if (itemId == R.id.optAddPoint) {
+            this.addPoint();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        MenuItem item=menu.findItem(R.id.drawPolyline);
+        if((item!=null && getArguments() != null && !getArguments().getBoolean("multiRoutes")) || point == null ){
+            item.setVisible(false);
+        }
+    }
+
+    @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.clear();
+        /*
         LatLng marker = new LatLng(-33.867, 151.206);
 
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(marker, 13));
 
         googleMap.addMarker(new MarkerOptions().title("Hello Google Maps!").position(marker));
-
-        if(mMap != null){
+*/
+        if (mMap != null) {
             mMap.getUiSettings().setMapToolbarEnabled(true);
         }
-        if(point != null){
-            this.addLocationsOnMap(point);
-            this.drawPolyline(listPoints);
+        if (getArguments() != null && getArguments().getBoolean("multiRoutes") == true) {
+            final PointsBDD pointsBDD = new PointsBDD(getActivity());
+            pointsBDD.open();
+            this.showLocationsOnMap(pointsBDD.getAllPoint());
+            pointsBDD.close();
+        } else if (point != null) {
+            this.addLocationsOnMap(point, false);
+            //this.drawPolyline(listPoints);
         }
         this.getLocation();
 
@@ -90,7 +140,7 @@ public class MapFragement  extends Fragment implements LocationListener, OnMapRe
 
             @Override
             public void onMapClick(LatLng latLng) {
-
+/*
                 // Creating a marker
                 MarkerOptions markerOptions = new MarkerOptions();
 
@@ -109,25 +159,31 @@ public class MapFragement  extends Fragment implements LocationListener, OnMapRe
 
                 // Placing a marker on the touched position
                 mMap.addMarker(markerOptions);
+                */
             }
         });
     }
 
     public void getLocation() {
-        gpsTracker = new GpsTracker(MainActivity.getAppContext());
-        if (gpsTracker.canGetLocation()) {
-            double latitude = gpsTracker.getLatitude();
-            double longitude = gpsTracker.getLongitude();
-            System.out.println(latitude + " "+ longitude);
-        } else {
-            gpsTracker.showSettingsAlert();
+        if (getActivity().getApplicationContext() != null) {
+            gpsTracker = new GpsTracker(getActivity().getApplicationContext());
+            if (gpsTracker.canGetLocation()) {
+                Point p = new Point();
+                p.setAtitude(String.valueOf(gpsTracker.getLatitude()));
+                p.setLongtude(String.valueOf(gpsTracker.getLongitude()));
+                this.addLocationsOnMap(p, true);
+            } else {
+                gpsTracker.showSettingsAlert(null);
+            }
         }
     }
-    private void showLocationsOnMap(ArrayList<Point> listPoints){
 
+    private void showLocationsOnMap(ArrayList<Point> listPoints) {
+        mMap.clear();
         float latitude;
         float longitude;
         Marker marker;
+        ArrayList<Marker> markers = new ArrayList<Marker>();
 
         //Add markers for all locations
         for (Point point : listPoints) {
@@ -136,12 +192,14 @@ public class MapFragement  extends Fragment implements LocationListener, OnMapRe
             longitude = Float.parseFloat(point.getLongtude());
             LatLng latlang = new LatLng(latitude, longitude);
 
-            marker = mMap.addMarker(new MarkerOptions()
+            markers.add(mMap.addMarker(new MarkerOptions()
                     .position(latlang)
-                    .title(point.getCreateDate()));
+                    .title(point.getCreateDate())
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.anchor))));
         }
     }
-    private void addLocationsOnMap(Point point){
+
+    private void addLocationsOnMap(Point point, boolean currentLocation) {
 
         float latitude;
         float longitude;
@@ -150,21 +208,29 @@ public class MapFragement  extends Fragment implements LocationListener, OnMapRe
         //Add markers for all locations
 
 
-            latitude = Float.parseFloat(point.getAtitude());
-            longitude = Float.parseFloat(point.getLongtude());
-            LatLng latlang = new LatLng(latitude, longitude);
+        latitude = Float.parseFloat(point.getAtitude());
+        longitude = Float.parseFloat(point.getLongtude());
+        LatLng latlang = new LatLng(latitude, longitude);
 
+        if (currentLocation) {
+            this.currentLocationMarker = mMap.addMarker(new MarkerOptions()
+                    .position(latlang)
+                    .title("موقعي")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+        } else {
             marker = mMap.addMarker(new MarkerOptions()
                     .position(latlang)
-                    .title(point.getCreateDate()));
+                    .title(point.getCreateDate())
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.anchor)));
+        }
 
-            this.moveToCurrentLocation(latlang);
+
+        this.moveToCurrentLocation(latlang);
 
     }
 
-    private void moveToCurrentLocation(LatLng currentLocation)
-    {
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation,15));
+    private void moveToCurrentLocation(LatLng currentLocation) {
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15));
         // Zoom in, animating the camera.
         mMap.animateCamera(CameraUpdateFactory.zoomIn());
         // Zoom out to zoom level 10, animating with a duration of 2 seconds.
@@ -172,31 +238,32 @@ public class MapFragement  extends Fragment implements LocationListener, OnMapRe
 
     }
 
-    private void drawPolyline(ArrayList<Point> listPoints){
+    private void drawPolyline(ArrayList<Point> listPoints) {
         PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
         for (int z = 0; z < listPoints.size(); z++) {
             LatLng point = new LatLng(Float.parseFloat(listPoints.get(z).getAtitude()), Float.parseFloat(listPoints.get(z).getLongtude()));
             options.add(point);
         }
-        LatLng point = new LatLng(30.395657, -9.605479);
-        options.add(point);
+
+        // add current location
+        GpsTracker tracker = new GpsTracker(getActivity());
+        if (!tracker.canGetLocation()) {
+            tracker.showSettingsAlert(null);
+        } else {
+            if (currentLocation == null) {
+                currentLocation = new Point();
+            }
+            currentLocation.setAtitude(String.valueOf(tracker.getLatitude()));
+            currentLocation.setLongtude(String.valueOf(tracker.getLongitude()));
+            LatLng point = new LatLng(tracker.getLatitude(), tracker.getLongitude());
+            options.add(point);
+        }
+
         Polyline line = mMap.addPolyline(options);
-    }
-
-    private double meterDistanceBetweenPoints(float lat_a, float lng_a, float lat_b, float lng_b) {
-        float pk = (float) (180.f/Math.PI);
-
-        float a1 = lat_a / pk;
-        float a2 = lng_a / pk;
-        float b1 = lat_b / pk;
-        float b2 = lng_b / pk;
-
-        double t1 = Math.cos(a1) * Math.cos(a2) * Math.cos(b1) * Math.cos(b2);
-        double t2 = Math.cos(a1) * Math.sin(a2) * Math.cos(b1) * Math.sin(b2);
-        double t3 = Math.sin(a1) * Math.sin(b1);
-        double tt = Math.acos(t1 + t2 + t3);
-
-        return 6366000 * tt;
+        this.currentLocationMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.arrow));
+        line.setEndCap(
+                new CustomCap(BitmapDescriptorFactory.fromResource(R.drawable.arrow),
+                        16));
     }
 
 
@@ -232,4 +299,38 @@ public class MapFragement  extends Fragment implements LocationListener, OnMapRe
     public void onProviderDisabled(String s) {
 
     }
+
+    public void addPoint() {
+        ProgressDialog dialog = ProgressDialog.show(getActivity(), "جاري العثور على مكانك", "المرجوا الإنتظار...", true);
+        try {
+            gpsTracker = new GpsTracker(getActivity());
+            if (gpsTracker.canGetLocation()) {
+                double latitude = gpsTracker.getLatitude();
+                double longitude = gpsTracker.getLongitude();
+                Point p = new Point();
+                p.setLongtude(String.valueOf(longitude));
+                p.setAtitude(String.valueOf(latitude));
+                DateFormat df = new SimpleDateFormat("yyyy.MM.dd");
+                String date = df.format(Calendar.getInstance().getTime());
+                final PointsBDD pointsBDD = new PointsBDD(getActivity());
+                pointsBDD.open();
+                p.setCreateDate(date);
+                p.setStat("true");
+                if (pointsBDD.insertPoint(p) > 0){
+                    System.out.println("Ajouter bien fait");
+                    Toast.makeText(getActivity(), "تم حفظ النقطة", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                }
+                pointsBDD.close();
+            } else {
+                gpsTracker.showSettingsAlert(dialog);
+            }
+
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
 }

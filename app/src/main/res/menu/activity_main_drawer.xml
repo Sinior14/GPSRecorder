@@ -5,19 +5,19 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/addPointDrawer"
+            android:id="@+id/menuAddPointDrawer"
             android:icon="@drawable/addmenu"
             android:title="إضافة نقطة" />
         <item
-            android:id="@+id/nav_gallery"
+            android:id="@+id/menuListPoint"
             android:icon="@drawable/listmenu"
             android:title="لائحة النقط" />
         <item
-            android:id="@+id/nav_slideshow"
+            android:id="@+id/menuRestore"
             android:icon="@drawable/discmenu"
             android:title="إستعادة" />
         <item
-            android:id="@+id/nav_manage"
+            android:id="@+id/menuExit"
             android:icon="@drawable/exitmenu"
             android:title="الخروج" />
     </group>

@@ -10,4 +10,11 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_maps">Map</string>
+    <string name="get_location">Get Location</string>
+    <string name="get_route">get route</string>
+    <string name="draw_route">رسم الطريق</string>
+    <string name="email">younes.zaroual.92@gmail.com</string>
+    <string name="applicationName">GPS Recorder</string>
+    <string name="Phone">00212 6.99.06.22.66</string>
+    <string name="logo">Logo</string>
 </resources>

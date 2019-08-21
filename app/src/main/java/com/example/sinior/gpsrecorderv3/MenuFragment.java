@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.sinior.gpsrecorderv3.Tools.Utils;
 import com.google.android.gms.maps.MapFragment;
 
 
@@ -33,6 +34,7 @@ public class MenuFragment extends Fragment implements View.OnClickListener  {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+    private Utils utils;
 
     ImageView imgCurrentPlace;
     ImageView imgSaveOrRestore;
@@ -88,8 +90,16 @@ public class MenuFragment extends Fragment implements View.OnClickListener  {
         tvCurrentPlace= (TextView) view.findViewById(R.id.tvCurrentPlace);
         tvListPoints = (TextView) view.findViewById(R.id.tvListPointsMenu);
 
+        imgExit = (ImageView) view.findViewById(R.id.imgExit);
+        imgListPoints = (ImageView) view.findViewById(R.id.imgListPointsMenu);
+        imgCurrentPlace = (ImageView) view.findViewById(R.id.imgCurrentPlace);
+
         tvCurrentPlace.setOnClickListener(this);
         tvListPoints.setOnClickListener(this);
+        tvExit.setOnClickListener(this);
+        imgExit.setOnClickListener(this);
+        imgCurrentPlace.setOnClickListener(this);
+        imgListPoints.setOnClickListener(this);
 
         return view;
     }
@@ -126,11 +136,22 @@ public class MenuFragment extends Fragment implements View.OnClickListener  {
             case R.id.tvCurrentPlace:
                 fragment = new MapFragement();
                 break;
+            case R.id.imgCurrentPlace:
+                fragment = new MapFragement();
+                break;
             case R.id.tvListPointsMenu:
                 fragment = new ListPoints();
                 break;
-            case R.id.btnListPointsMenu:
+            case R.id.imgListPointsMenu:
                 fragment = new ListPoints();
+                break;
+            case R.id.tvExit:
+                this.utils = new Utils(getActivity().getApplicationContext());
+                this.utils.exitApplication();
+                break;
+            case R.id.imgExit:
+                this.utils = new Utils(getActivity().getApplicationContext());
+                this.utils.exitApplication();
                 break;
         }
         //replacing the fragment

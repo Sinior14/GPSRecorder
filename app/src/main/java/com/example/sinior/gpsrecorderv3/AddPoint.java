@@ -1,6 +1,8 @@
 package com.example.sinior.gpsrecorderv3;
 
 import android.app.FragmentManager;
+import android.app.FragmentTransaction;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Address;
@@ -11,8 +13,8 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -56,8 +58,10 @@ public class AddPoint extends Fragment implements LocationListener, View.OnClick
     private EditText tvLatitude, tvLongitude;
     private ImageView imgSavePoint, imgResetPoint;
     private OnFragmentInteractionListener mListener;
+    FragmentTransaction frgmtTrans;
     LocationManager locationManager;
     Point pt;
+    ProgressDialog dialog;
 
     public AddPoint() {
         // Required empty public constructor
@@ -99,7 +103,7 @@ public class AddPoint extends Fragment implements LocationListener, View.OnClick
             tvLatitude.setText(String.valueOf(latitude));
             tvLongitude.setText(String.valueOf(longitude));
         } else {
-            gpsTracker.showSettingsAlert();
+            gpsTracker.showSettingsAlert(null);
         }
     }
 
@@ -116,6 +120,22 @@ public class AddPoint extends Fragment implements LocationListener, View.OnClick
         this.getLocation();
         imgSavePoint.setOnClickListener(this);
         imgResetPoint.setOnClickListener(this);
+
+        tvLatitude.addTextChangedListener(new TextWatcher() {
+
+            public void afterTextChanged(Editable s) {
+                dialog.dismiss();
+            }
+
+            public void beforeTextChanged(CharSequence s, int start,
+                                          int count, int after) {
+            }
+
+            public void onTextChanged(CharSequence s, int start,
+                                      int before, int count) {
+            }
+        });
+
         return view;
     }
 
@@ -127,7 +147,9 @@ public class AddPoint extends Fragment implements LocationListener, View.OnClick
     }
 
     void getLocation() {
+        this.dialog = ProgressDialog.show(getActivity(), "جاري العثور على مكانك", "المرجوا الإنتظار...", true);
         try {
+
             locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 5, this);
         } catch (SecurityException e) {
@@ -168,7 +190,7 @@ public class AddPoint extends Fragment implements LocationListener, View.OnClick
 
     @Override
     public void onProviderDisabled(String s) {
-        Toast.makeText(MainActivity.getAppContext(), "Please Enable GPS and Internet", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getActivity(), "Please Enable GPS and Internet", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -207,6 +229,7 @@ public class AddPoint extends Fragment implements LocationListener, View.OnClick
 
     @Override
     public void onClick(View view) {
+        android.app.Fragment fragment = new ListPoints();
         switch (view.getId()) {
             case R.id.imgSavePoint:
                 this.addPoint(pt);
@@ -215,6 +238,13 @@ public class AddPoint extends Fragment implements LocationListener, View.OnClick
 
                 break;
 
+        }
+        //replacing the fragment
+        if (fragment != null) {
+            final FragmentManager fragmentManager = getFragmentManager();
+            frgmtTrans = fragmentManager.beginTransaction();
+            frgmtTrans.replace(R.id.content_frame, fragment);
+            frgmtTrans.commit();
         }
     }
 

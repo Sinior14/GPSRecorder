@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "689127795206",
+    "firebase_url": "https://gpsrecorder-a6ebc.firebaseio.com",
+    "project_id": "gpsrecorder-a6ebc",
+    "storage_bucket": "gpsrecorder-a6ebc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:689127795206:android:28ffd6d963c03bed",
+        "android_client_info": {
+          "package_name": "com.example.sinior.gpsrecorderv3"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "689127795206-d7eerb9fhigur65mubk0425b6pvia7es.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_CxDcnKvpbRmzwIaHkT3PHEFoXacfvNo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "689127795206-d7eerb9fhigur65mubk0425b6pvia7es.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

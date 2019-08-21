@@ -4,16 +4,12 @@ import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
-import android.graphics.Typeface;
-import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 
@@ -24,8 +20,6 @@ import com.example.sinior.gpsrecorderv3.MapFragement;
 import com.example.sinior.gpsrecorderv3.R;
 
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -53,7 +47,7 @@ public class PointsAdapter extends ArrayAdapter {
             // Lookup view for data population
             TextView tvAtLg = (TextView) convertView.findViewById(R.id.tvAtLg);
             TextView tvCreateDate = (TextView) convertView.findViewById(R.id.tvCreateDate);
-            TextView tvLireAlso = (TextView) convertView.findViewById(R.id.tvLireAlso);
+            ImageView tvLireAlso = (ImageView) convertView.findViewById(R.id.tvLireAlso);
             ImageButton btnDeleteItem = (ImageButton) convertView.findViewById(R.id.btnDeleteItem);
             CircleImageView cimag = (CircleImageView) convertView.findViewById(R.id.profile_image);
             tvLireAlso.setOnClickListener(new View.OnClickListener() {
@@ -91,7 +85,7 @@ public class PointsAdapter extends ArrayAdapter {
             // Lookup view for data population
             TextView tvAtLg = (TextView) convertView.findViewById(R.id.tvAtLg);
             TextView tvCreateDate = (TextView) convertView.findViewById(R.id.tvCreateDate);
-            TextView tvLireAlso = (TextView) convertView.findViewById(R.id.tvLireAlso);
+            ImageView tvLireAlso = (ImageView) convertView.findViewById(R.id.tvLireAlso);
             CircleImageView cimag = (CircleImageView) convertView.findViewById(R.id.profile_image);
             ImageButton btnDeleteItem = (ImageButton) convertView.findViewById(R.id.btnDeleteItem);
             tvLireAlso.setOnClickListener(new View.OnClickListener() {

@@ -2,6 +2,7 @@ package com.example.sinior.gpsrecorderv3.Tools;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.app.Service;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,9 +14,11 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AlertDialog;
+
 import android.util.Log;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
 
 public class GpsTracker extends Service implements LocationListener {
     private final Context mContext;
@@ -138,7 +141,7 @@ public class GpsTracker extends Service implements LocationListener {
      * Function to show settings alert dialog
      * On pressing Settings button will lauch Settings Options
      * */
-    public void showSettingsAlert(){
+    public void showSettingsAlert(final ProgressDialog dialg){
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(mContext);
         // Setting Dialog Title
         alertDialog.setTitle("GPS is settings");
@@ -149,12 +152,18 @@ public class GpsTracker extends Service implements LocationListener {
             public void onClick(DialogInterface dialog,int which) {
                 Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 mContext.startActivity(intent);
+                if(dialg != null){
+                    dialg.dismiss();
+                }
             }
         });
         // on pressing cancel button
         alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
+                if(dialg != null){
+                    dialg.dismiss();
+                }
             }
         });
         alertDialog.show();
