@@ -5,6 +5,7 @@ import android.content.Intent;
 
 import com.example.sinior.gpsrecorderv3.Beans.Point;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Utils {
@@ -50,5 +51,20 @@ public class Utils {
             }
         }
         return nearestPoint;
+    }
+
+    public ArrayList<Point> sortByNearstPoint(Point nearsetPoint, ArrayList pointsList){
+        ArrayList<Point> sortedList = new ArrayList<Point>();
+        sortedList.add(nearsetPoint);
+        ArrayList<Point> tmpList = pointsList;
+        Point tmpNearstPoint = nearsetPoint;
+        tmpList.remove(tmpNearstPoint);
+        while (sortedList.size() == pointsList.size()) {
+            tmpNearstPoint = this.getNearestPoint(tmpList, tmpNearstPoint);
+            sortedList.add(tmpNearstPoint);
+            tmpList.remove(tmpNearstPoint);
+        }
+
+        return sortedList;
     }
 }

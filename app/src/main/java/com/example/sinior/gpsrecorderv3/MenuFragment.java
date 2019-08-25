@@ -37,12 +37,12 @@ public class MenuFragment extends Fragment implements View.OnClickListener  {
     private Utils utils;
 
     ImageView imgCurrentPlace;
-    ImageView imgSaveOrRestore;
+    ImageView imgSavePoint;
     ImageView imgListPoints;
     ImageView imgExit;
 
     TextView tvCurrentPlace;
-    TextView tvSaveOrRestore;
+    TextView tvSaveImport;
     TextView tvListPoints;
     TextView tvExit;
 
@@ -89,17 +89,21 @@ public class MenuFragment extends Fragment implements View.OnClickListener  {
         tvExit= (TextView) view.findViewById(R.id.tvExit);
         tvCurrentPlace= (TextView) view.findViewById(R.id.tvCurrentPlace);
         tvListPoints = (TextView) view.findViewById(R.id.tvListPointsMenu);
+        tvSaveImport = (TextView) view.findViewById(R.id.tvSaveImport);
 
         imgExit = (ImageView) view.findViewById(R.id.imgExit);
         imgListPoints = (ImageView) view.findViewById(R.id.imgListPointsMenu);
         imgCurrentPlace = (ImageView) view.findViewById(R.id.imgCurrentPlace);
+        imgSavePoint = (ImageView) view.findViewById(R.id.imgSavePoints);
 
         tvCurrentPlace.setOnClickListener(this);
         tvListPoints.setOnClickListener(this);
         tvExit.setOnClickListener(this);
+        tvSaveImport.setOnClickListener(this);
         imgExit.setOnClickListener(this);
         imgCurrentPlace.setOnClickListener(this);
         imgListPoints.setOnClickListener(this);
+        imgSavePoint.setOnClickListener(this);
 
         return view;
     }
@@ -152,6 +156,12 @@ public class MenuFragment extends Fragment implements View.OnClickListener  {
             case R.id.imgExit:
                 this.utils = new Utils(getActivity().getApplicationContext());
                 this.utils.exitApplication();
+                break;
+            case R.id.tvSaveImport:
+                fragment = new StoredPointsFragment();
+                break;
+            case R.id.imgSavePoints:
+                fragment = new StoredPointsFragment();
                 break;
         }
         //replacing the fragment

@@ -10,10 +10,7 @@ import android.location.LocationListener;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
-import android.os.Parcelable;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -33,14 +30,6 @@ import java.util.Collections;
 import java.util.List;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link ListPoints.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link ListPoints#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class ListPoints extends Fragment implements LocationListener, View.OnClickListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -70,15 +59,6 @@ public class ListPoints extends Fragment implements LocationListener, View.OnCli
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment ListPoints.
-     */
-    // TODO: Rename and change types and number of parameters
     public static ListPoints newInstance(String param1, String param2) {
         ListPoints fragment = new ListPoints();
         Bundle args = new Bundle();
@@ -137,6 +117,21 @@ public class ListPoints extends Fragment implements LocationListener, View.OnCli
 
 
         return view;
+    }
+
+    public ArrayList<Point> sortByNearstPoint(){
+        ArrayList<Point> sortedList = new ArrayList<Point>();
+        sortedList.add(this.nearsetPoint);
+        ArrayList<Point> tmpList = this.pointsList;
+        Point tmpNearstPoint = nearsetPoint;
+        tmpList.remove(tmpNearstPoint);
+        while (sortedList.size() == pointsList.size()) {
+            tmpNearstPoint = this.utils.getNearestPoint(tmpList, tmpNearstPoint);
+            sortedList.add(tmpNearstPoint);
+            tmpList.remove(tmpNearstPoint);
+        }
+
+        return sortedList;
     }
 
     @Override
@@ -232,7 +227,6 @@ public class ListPoints extends Fragment implements LocationListener, View.OnCli
     }
 
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
 

@@ -191,6 +191,12 @@ public class AddPoint extends Fragment implements LocationListener, View.OnClick
     @Override
     public void onProviderDisabled(String s) {
         Toast.makeText(getActivity(), "Please Enable GPS and Internet", Toast.LENGTH_SHORT).show();
+        this.dialog.dismiss();
+        android.app.Fragment fragment = new ListPoints();
+        final FragmentManager fragmentManager = getFragmentManager();
+        frgmtTrans = fragmentManager.beginTransaction();
+        frgmtTrans.replace(R.id.content_frame, fragment);
+        frgmtTrans.commit();
     }
 
     @Override
@@ -235,7 +241,7 @@ public class AddPoint extends Fragment implements LocationListener, View.OnClick
                 this.addPoint(pt);
                 break;
             case R.id.imgResetPoint:
-
+                fragment = new ListPoints();
                 break;
 
         }
