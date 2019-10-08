@@ -3,6 +3,7 @@ package com.example.sinior.gpsrecorderv3;
 
 import android.app.FragmentManager;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
 
 import android.view.Menu;
@@ -19,7 +20,10 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener,
+        MenuFragment.OnFragmentInteractionListener,
+        ListPoints.OnFragmentInteractionListener,
+        AddPoint.OnFragmentInteractionListener {
     private static Context context;
 
 
@@ -103,5 +107,9 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+    }
 }
 
