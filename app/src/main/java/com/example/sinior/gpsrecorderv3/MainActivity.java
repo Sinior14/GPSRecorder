@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         MenuFragment.OnFragmentInteractionListener,
         ListPoints.OnFragmentInteractionListener,
+        StoredPointsFragment.OnFragmentInteractionListener,
         AddPoint.OnFragmentInteractionListener {
     private static Context context;
 

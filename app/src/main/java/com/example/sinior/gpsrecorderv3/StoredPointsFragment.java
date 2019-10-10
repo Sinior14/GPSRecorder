@@ -107,10 +107,19 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnNewStore:
-                mDatabaseReference = mDatabase.getReference().child("bika");
-                mDatabaseReference.setValue("Donald Duck");
+
+                Point pt = new Point();
+                pt.setLongtude("123");
+                pt.setAtitude("456");
+                //mDatabaseReference = mDatabase.getReference().child("bika");
+                //mDatabaseReference.setValue("Donald Duck");
                 FirebaseDatabase database = FirebaseDatabase.getInstance();
                 DatabaseReference myRef = database.getReference("bika");
+                HashMap<String, Integer> pts = new HashMap<String, Integer>();
+                //pts.
+                //pts.put("alanisawesome", pt);
+
+                mDatabaseReference.setValue(pt);
 
                 myRef.setValue("Hello, World!");
                 //mDatabaseReference = mDatabase.getReference().child("user");
