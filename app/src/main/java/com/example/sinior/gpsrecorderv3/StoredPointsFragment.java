@@ -20,6 +20,14 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -111,20 +119,32 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
                 Point pt = new Point();
                 pt.setLongtude("123");
                 pt.setAtitude("456");
-                //mDatabaseReference = mDatabase.getReference().child("bika");
+                mDatabaseReference = mDatabase.getReference().child("bika");
                 //mDatabaseReference.setValue("Donald Duck");
-                FirebaseDatabase database = FirebaseDatabase.getInstance();
-                DatabaseReference myRef = database.getReference("bika");
-                HashMap<String, Integer> pts = new HashMap<String, Integer>();
+                //FirebaseDatabase database = FirebaseDatabase.getInstance();
+                //DatabaseReference myRef = database.getReference("bika");
+                Map<String, Point> pts = new HashMap<>();
                 //pts.
                 //pts.put("alanisawesome", pt);
 
-                mDatabaseReference.setValue(pt);
+               // mDatabaseReference.setValue(pt);
 
-                myRef.setValue("Hello, World!");
+                //myRef.setValue("Hello, World!");
                 //mDatabaseReference = mDatabase.getReference().child("user");
                 Point p = new Point();
                 mDatabaseReference.setValue(p);
+                final FirebaseDatabase database = FirebaseDatabase.getInstance();
+                DatabaseReference ref = mDatabase.getReference().child("bika");
+                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                Date date = new Date();
+                System.out.println(dateFormat.format(date));
+                DatabaseReference usersRef = ref.child("" + dateFormat.format(date).toString());
+
+                List<Point> users = new ArrayList<>();
+                users.add( pt);
+                usersRef.setValue(users);
+
+
                 break;
             case R.id.btnDeleteAllStore:
                 new AlertDialog.Builder(getActivity())
