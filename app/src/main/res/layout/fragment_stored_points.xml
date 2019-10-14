@@ -114,7 +114,7 @@ tools:context=".StoredPointsFragment">
             android:orientation="vertical">
 
             <ListView
-                android:id="@+id/lvPoints"
+                android:id="@+id/lvStoredData"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:focusable="true" />

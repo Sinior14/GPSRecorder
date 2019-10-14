@@ -8,25 +8,41 @@ import android.os.Bundle;
 
 import android.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
+import com.example.sinior.gpsrecorderv3.Adapter.PointsAdapter;
+import com.example.sinior.gpsrecorderv3.Adapter.StoredDataAdapter;
+import com.example.sinior.gpsrecorderv3.BDD.PointsBDD;
 import com.example.sinior.gpsrecorderv3.Beans.Point;
+import com.example.sinior.gpsrecorderv3.Tools.GpsTracker;
+import com.example.sinior.gpsrecorderv3.Tools.Utils;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.core.Tag;
 
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
 
 
 /**
@@ -49,6 +65,11 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
     private FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
     private DatabaseReference mDatabaseReference = mDatabase.getReference();
     Button btnNewStore;
+    ArrayList<Map<String, Point> > listStoredData;
+    ListView lvStoredData;
+    StoredDataAdapter adapter;
+    private Utils utils;
+
 
     private OnFragmentInteractionListener mListener;
 
@@ -84,6 +105,40 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
         btnNewStore = (Button) view.findViewById(R.id.btnNewStore);
 
         btnNewStore.setOnClickListener(this);
+        mDatabaseReference = mDatabase.getReference().child("bika");
+        mDatabaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                System.out.println("dataSnapshot");
+                listStoredData = new ArrayList<>();
+                for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
+                    //user = singleSnapshot.getValue(User.class);
+                   // Map<String, Point> listStoredData = new HashMap<>();
+
+                    listStoredData.add((Map<String, Point>) singleSnapshot.getValue());
+                    //listStoredData.put(singleSnapshot)
+                    //System.out.println(singleSnapshot);
+                }
+                System.out.println(listStoredData);
+                adapter = new StoredDataAdapter(getActivity(), listStoredData);
+                lvStoredData.setAdapter(adapter);
+                //User user = dataSnapshot.getValue(User.class);
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+                System.out.println("Failed to read value." + error.toException());
+            }
+        });
+        lvStoredData = (ListView) view.findViewById(R.id.lvStoredData);
+        listStoredData = new ArrayList<>();
+        adapter = new StoredDataAdapter(getActivity(), listStoredData);
+        lvStoredData
+                .setAdapter(adapter);
+        this.utils = new Utils(getActivity());
+
         return view;
     }
 
@@ -118,8 +173,8 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
 
                 Point pt = new Point();
                 pt.setLongtude("123");
-                pt.setAtitude("456");
-                mDatabaseReference = mDatabase.getReference().child("bika");
+                pt.setAtitude("789");
+
                 //mDatabaseReference.setValue("Donald Duck");
                 //FirebaseDatabase database = FirebaseDatabase.getInstance();
                 //DatabaseReference myRef = database.getReference("bika");
@@ -132,17 +187,32 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
                 //myRef.setValue("Hello, World!");
                 //mDatabaseReference = mDatabase.getReference().child("user");
                 Point p = new Point();
-                mDatabaseReference.setValue(p);
+                //mDatabaseReference.setValue(p);
                 final FirebaseDatabase database = FirebaseDatabase.getInstance();
                 DatabaseReference ref = mDatabase.getReference().child("bika");
                 DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                 Date date = new Date();
                 System.out.println(dateFormat.format(date));
-                DatabaseReference usersRef = ref.child("" + dateFormat.format(date).toString());
+                final DatabaseReference usersRef = ref.child("" + dateFormat.format(date).toString());
 
                 List<Point> users = new ArrayList<>();
                 users.add( pt);
-                usersRef.setValue(users);
+                Map<String, Point> map = new HashMap<>();
+                map.put(dateFormat.format(date).toString(), pt);
+                ref.push().setValue(map)
+                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                // Write failed
+                                // ...
+                            }
+                        });;
 
 
                 break;
@@ -166,6 +236,11 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
                 break;
 
         }
+
+    }
+
+
+    public void onCancelled(@NonNull DatabaseError databaseError) {
 
     }
 

@@ -26,8 +26,6 @@ import com.example.sinior.gpsrecorderv3.Tools.Utils;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 
 public class ListPoints extends Fragment implements LocationListener, View.OnClickListener {
