@@ -17,8 +17,11 @@ import com.example.sinior.gpsrecorderv3.Beans.Point;
 import com.example.sinior.gpsrecorderv3.ListPoints;
 import com.example.sinior.gpsrecorderv3.MapFragement;
 import com.example.sinior.gpsrecorderv3.R;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -27,6 +30,8 @@ public class StoredDataAdapter extends ArrayAdapter {
     ArrayList<Map<String, Point>> storedData;
     Context context;
     FragmentTransaction frgmtTrans;
+    private FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
+    private DatabaseReference mDatabaseReference = mDatabase.getReference();
 
     public StoredDataAdapter(Context context, ArrayList<Map<String, Point>> storedData) {
         super(context, 0, storedData);
@@ -65,6 +70,13 @@ public class StoredDataAdapter extends ArrayAdapter {
             btnDeleteItem.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    mDatabaseReference = mDatabase.getReference().child("bika");
+
+                    Map<String, Object> updateItem = new HashMap<>();
+                    dataItem.entrySet().iterator().next().getValue().setRemoved(true);
+                    updateItem.put(dataItem.entrySet().iterator().next().getKey(), dataItem.entrySet().iterator().next().getValue());
+                    mDatabaseReference.setValue(dataItem.entrySet().iterator().next().getKey(), dataItem.entrySet().iterator().next().getValue());
+                    System.out.println();
                     /*final PointsBDD pointsBDD = new PointsBDD(context);
                     pointsBDD.open();
                     pointsBDD.removePointWithID(Pt.getId());
@@ -104,6 +116,15 @@ public class StoredDataAdapter extends ArrayAdapter {
             btnDeleteItem.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    mDatabaseReference = mDatabase.getReference().child("bika");
+
+                    Map<String, Object> updateItem = new HashMap<>();
+                    ArrayList<Point> values = new ArrayList<>(dataItem.values());
+                    System.out.println( values);
+                    /*Point pt =  values.get(0);
+                    pt.setRemoved(true);
+                    updateItem.put(dataItem.entrySet().iterator().next().getKey(), pt);
+                    mDatabaseReference.setValue(dataItem.entrySet().iterator().next().getKey(), dataItem.entrySet().iterator().next().getValue());
                     /*final PointsBDD pointsBDD = new PointsBDD(context);
                     pointsBDD.open();
                     pointsBDD.removePointWithID(Pt.getId());

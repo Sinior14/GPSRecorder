@@ -9,6 +9,7 @@ public class Point {
     private String longtude;
     private String createDate;
     private String stat;
+    private boolean removed;
 
     public Point() {
     }
@@ -66,5 +67,13 @@ public class Point {
 
     public void setStat(String stat) {
         this.stat = stat;
+    }
+
+    public boolean isRemoved() {
+        return removed;
+    }
+
+    public void setRemoved(boolean removed) {
+        this.removed = removed;
     }
 }

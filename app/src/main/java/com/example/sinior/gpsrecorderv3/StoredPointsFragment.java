@@ -170,7 +170,10 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnNewStore:
-
+                final PointsBDD pointsBDD = new PointsBDD(getActivity());
+                pointsBDD.open();
+                ArrayList<Point> pointsList = pointsBDD.getAllPoint();
+                pointsBDD.close();
                 Point pt = new Point();
                 pt.setLongtude("123");
                 pt.setAtitude("789");
@@ -179,6 +182,11 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
                 //FirebaseDatabase database = FirebaseDatabase.getInstance();
                 //DatabaseReference myRef = database.getReference("bika");
                 Map<String, Point> pts = new HashMap<>();
+                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                for(int i=0; i<pointsList.size(); i++){
+                    System.out.println(pointsList.get(i).getCreateDate().replaceAll("\\.", "-"));
+                    pts.put(pointsList.get(i).getCreateDate().replaceAll("\\.", "-"), pointsList.get(i));
+                }
                 //pts.
                 //pts.put("alanisawesome", pt);
 
@@ -190,7 +198,7 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
                 //mDatabaseReference.setValue(p);
                 final FirebaseDatabase database = FirebaseDatabase.getInstance();
                 DatabaseReference ref = mDatabase.getReference().child("bika");
-                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
                 Date date = new Date();
                 System.out.println(dateFormat.format(date));
                 final DatabaseReference usersRef = ref.child("" + dateFormat.format(date).toString());
@@ -199,7 +207,8 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
                 users.add( pt);
                 Map<String, Point> map = new HashMap<>();
                 map.put(dateFormat.format(date).toString(), pt);
-                ref.push().setValue(map)
+                System.out.println(pts);
+                ref.push().setValue(pts)
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {
