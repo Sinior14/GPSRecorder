@@ -2,26 +2,38 @@ package com.example.sinior.gpsrecorderv3.Tools;
 
 import android.content.Context;
 import android.content.Intent;
+import android.speech.tts.TextToSpeech;
 
 import com.example.sinior.gpsrecorderv3.Beans.Point;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class Utils {
 
     private final Context mContext;
+    TextToSpeech textToSpeech;
 
     public Utils(Context mContext) {
         this.mContext = mContext;
+        textToSpeech = new TextToSpeech(mContext, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status != TextToSpeech.ERROR) {
+                    textToSpeech.setLanguage(Locale.US);
+                }
+            }
+        });
     }
 
-    public void exitApplication(){
+    public void exitApplication() {
         System.exit(1);
     }
 
     public double meterDistanceBetweenPoints(float lat_a, float lng_a, float lat_b, float lng_b) {
-        float pk = (float) (180.f/Math.PI);
+        float pk = (float) (180.f / Math.PI);
 
         float a1 = lat_a / pk;
         float a2 = lng_a / pk;
@@ -36,16 +48,15 @@ public class Utils {
         return 6366000 * tt;
     }
 
-    public Point getNearestPoint(List<Point> points, Point currentPoint){
+    public Point getNearestPoint(List<Point> points, Point currentPoint) {
         Point nearestPoint = null;
         Double tmpDistance = null;
-        for (Point p : points)
-        {
-            Double pDistance = this.meterDistanceBetweenPoints(Float.parseFloat(currentPoint.getAtitude()),Float.parseFloat(currentPoint.getLongtude()),Float.parseFloat(p.getAtitude()),Float.parseFloat(p.getLongtude()));
-            if(tmpDistance == null){
+        for (Point p : points) {
+            Double pDistance = this.meterDistanceBetweenPoints(Float.parseFloat(currentPoint.getAtitude()), Float.parseFloat(currentPoint.getLongtude()), Float.parseFloat(p.getAtitude()), Float.parseFloat(p.getLongtude()));
+            if (tmpDistance == null) {
                 tmpDistance = pDistance;
                 nearestPoint = p;
-            }else if(tmpDistance > pDistance){
+            } else if (tmpDistance > pDistance) {
                 tmpDistance = pDistance;
                 nearestPoint = p;
             }
@@ -53,7 +64,7 @@ public class Utils {
         return nearestPoint;
     }
 
-    public ArrayList<Point> sortByNearstPoint(Point nearsetPoint, ArrayList pointsList){
+    public ArrayList<Point> sortByNearstPoint(Point nearsetPoint, ArrayList pointsList) {
         ArrayList<Point> sortedList = new ArrayList<Point>();
         sortedList.add(nearsetPoint);
         ArrayList<Point> tmpList = pointsList;
@@ -66,5 +77,20 @@ public class Utils {
         }
 
         return sortedList;
+    }
+
+    public boolean isInternetAvailable() {
+        try {
+            InetAddress ipAddr = InetAddress.getByName("google.com");
+            //You can replace it with your name
+            return !ipAddr.equals("");
+
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public void useTextToSpeech(String message) {
+        textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null);
     }
 }

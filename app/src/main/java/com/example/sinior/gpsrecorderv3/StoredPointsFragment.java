@@ -8,41 +8,35 @@ import android.os.Bundle;
 
 import android.app.Fragment;
 
-import android.util.Log;
+import android.speech.tts.TextToSpeech;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
 
-import com.example.sinior.gpsrecorderv3.Adapter.PointsAdapter;
 import com.example.sinior.gpsrecorderv3.Adapter.StoredDataAdapter;
 import com.example.sinior.gpsrecorderv3.BDD.PointsBDD;
 import com.example.sinior.gpsrecorderv3.Beans.Point;
-import com.example.sinior.gpsrecorderv3.Tools.GpsTracker;
 import com.example.sinior.gpsrecorderv3.Tools.Utils;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.database.core.Tag;
 
 import java.text.DateFormat;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
+import cn.pedant.SweetAlert.SweetAlertDialog;
 
 
 /**
@@ -68,6 +62,7 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
     ArrayList<Map<String, Point> > listStoredData;
     ListView lvStoredData;
     StoredDataAdapter adapter;
+    TextToSpeech textToSpeech;
     private Utils utils;
 
 
@@ -102,15 +97,15 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view =inflater.inflate(R.layout.fragment_stored_points, container, false);
+        this.utils = new Utils(getActivity());
         btnNewStore = (Button) view.findViewById(R.id.btnNewStore);
-
         btnNewStore.setOnClickListener(this);
         mDatabaseReference = mDatabase.getReference().child("bika");
         mDatabaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                System.out.println("dataSnapshot");
                 listStoredData = new ArrayList<>();
+
                 for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                     //user = singleSnapshot.getValue(User.class);
                    // Map<String, Point> listStoredData = new HashMap<>();
@@ -119,7 +114,6 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
                     //listStoredData.put(singleSnapshot)
                     //System.out.println(singleSnapshot);
                 }
-                System.out.println(listStoredData);
                 adapter = new StoredDataAdapter(getActivity(), listStoredData);
                 lvStoredData.setAdapter(adapter);
                 //User user = dataSnapshot.getValue(User.class);
@@ -129,15 +123,33 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
             @Override
             public void onCancelled(DatabaseError error) {
                 // Failed to read value
+
                 System.out.println("Failed to read value." + error.toException());
             }
         });
+
+        textToSpeech=new TextToSpeech(getActivity(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if(status != TextToSpeech.ERROR) {
+                    textToSpeech.setLanguage(Locale.US);
+                }
+            }
+        });
+
+        if(!utils.isInternetAvailable()) {
+            //Error message
+            new SweetAlertDialog(getActivity(), SweetAlertDialog.ERROR_TYPE)
+                    .setTitleText("Oops...")
+                    .setContentText("لست متصلا بالأنترنت !")
+                    .show();
+        }
         lvStoredData = (ListView) view.findViewById(R.id.lvStoredData);
         listStoredData = new ArrayList<>();
         adapter = new StoredDataAdapter(getActivity(), listStoredData);
         lvStoredData
                 .setAdapter(adapter);
-        this.utils = new Utils(getActivity());
+
 
         return view;
     }
@@ -165,6 +177,14 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
         super.onDetach();
         mListener = null;
     }
+    @Override
+    public void onPause(){
+        if(textToSpeech !=null){
+            textToSpeech.stop();
+            textToSpeech.shutdown();
+        }
+        super.onPause();
+    }
 
     @Override
     public void onClick(View view) {
@@ -174,44 +194,28 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
                 pointsBDD.open();
                 ArrayList<Point> pointsList = pointsBDD.getAllPoint();
                 pointsBDD.close();
-                Point pt = new Point();
-                pt.setLongtude("123");
-                pt.setAtitude("789");
 
-                //mDatabaseReference.setValue("Donald Duck");
-                //FirebaseDatabase database = FirebaseDatabase.getInstance();
-                //DatabaseReference myRef = database.getReference("bika");
-                Map<String, Point> pts = new HashMap<>();
+                Map<String, ArrayList<Point>> pts = new HashMap<>();
                 DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                for(int i=0; i<pointsList.size(); i++){
-                    System.out.println(pointsList.get(i).getCreateDate().replaceAll("\\.", "-"));
-                    pts.put(pointsList.get(i).getCreateDate().replaceAll("\\.", "-"), pointsList.get(i));
-                }
-                //pts.
-                //pts.put("alanisawesome", pt);
-
-               // mDatabaseReference.setValue(pt);
-
-                //myRef.setValue("Hello, World!");
-                //mDatabaseReference = mDatabase.getReference().child("user");
-                Point p = new Point();
-                //mDatabaseReference.setValue(p);
-                final FirebaseDatabase database = FirebaseDatabase.getInstance();
-                DatabaseReference ref = mDatabase.getReference().child("bika");
-
                 Date date = new Date();
-                System.out.println(dateFormat.format(date));
-                final DatabaseReference usersRef = ref.child("" + dateFormat.format(date).toString());
-
-                List<Point> users = new ArrayList<>();
-                users.add( pt);
-                Map<String, Point> map = new HashMap<>();
-                map.put(dateFormat.format(date).toString(), pt);
-                System.out.println(pts);
+                pts.put(dateFormat.format(date).replaceAll("\\.", "-"), pointsList);
+                DatabaseReference ref = mDatabase.getReference().child("bika");
                 ref.push().setValue(pts)
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {
+                                utils.useTextToSpeech("Safi tsajal");
+                                // 1. Success message
+                                new SweetAlertDialog(getActivity())
+                                        .setTitleText("تم الحفظ بنجاح !")
+                                        .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                                            @Override
+                                            public void onClick(SweetAlertDialog sDialog) {
+                                                sDialog.dismissWithAnimation();
+                                            }
+                                        })
+                                        .show();
+
 
                             }
                         })
