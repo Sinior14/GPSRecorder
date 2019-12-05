@@ -32,8 +32,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import androidx.annotation.NonNull;
 import cn.pedant.SweetAlert.SweetAlertDialog;
@@ -59,7 +62,7 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
     private FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
     private DatabaseReference mDatabaseReference = mDatabase.getReference();
     Button btnNewStore;
-    ArrayList<Map<String, Point> > listStoredData;
+    ArrayList<Map<String, Point>> listStoredData;
     ListView lvStoredData;
     StoredDataAdapter adapter;
     TextToSpeech textToSpeech;
@@ -96,8 +99,8 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view =inflater.inflate(R.layout.fragment_stored_points, container, false);
-        this.utils = new Utils(getActivity());
+        View view = inflater.inflate(R.layout.fragment_stored_points, container, false);
+        utils = new Utils(view.getContext());
         btnNewStore = (Button) view.findViewById(R.id.btnNewStore);
         btnNewStore.setOnClickListener(this);
         mDatabaseReference = mDatabase.getReference().child("bika");
@@ -106,15 +109,32 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
             public void onDataChange(DataSnapshot dataSnapshot) {
                 listStoredData = new ArrayList<>();
 
-                for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
+                for (DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
                     //user = singleSnapshot.getValue(User.class);
-                   // Map<String, Point> listStoredData = new HashMap<>();
+                    // Map<String, Point> listStoredData = new HashMap<>();
 
                     listStoredData.add((Map<String, Point>) singleSnapshot.getValue());
                     //listStoredData.put(singleSnapshot)
                     //System.out.println(singleSnapshot);
                 }
                 adapter = new StoredDataAdapter(getActivity(), listStoredData);
+                System.out.println("listStoredData");
+                System.out.println(listStoredData);
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                    List<Object> temp = listStoredData.stream().filter(new Predicate<Map<String, Point>>() {
+                        @Override
+                        public boolean test(Map<String, Point> item) {
+                            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                            Date date = new Date();
+                            return item.entrySet().iterator().next().getKey().contains(dateFormat.format(date).replaceAll("\\.", "-"));
+                        }
+                    }).collect(Collectors.toList());
+
+                    ArrayList<Map<String, Point>> listOfCurrentDateItems = new ArrayList(temp);
+
+                    System.out.println("listOfCurrentDateItems");
+                    System.out.println(listOfCurrentDateItems);
+                }
                 lvStoredData.setAdapter(adapter);
                 //User user = dataSnapshot.getValue(User.class);
 
@@ -128,21 +148,31 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
             }
         });
 
-        textToSpeech=new TextToSpeech(getActivity(), new TextToSpeech.OnInitListener() {
+        textToSpeech = new TextToSpeech(getActivity(), new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
-                if(status != TextToSpeech.ERROR) {
+                if (status != TextToSpeech.ERROR) {
                     textToSpeech.setLanguage(Locale.US);
                 }
             }
         });
 
-        if(!utils.isInternetAvailable()) {
+        if (!utils.isInternetAvailable()) {
+
             //Error message
-            new SweetAlertDialog(getActivity(), SweetAlertDialog.ERROR_TYPE)
+            SweetAlertDialog dialog = new SweetAlertDialog(view.getContext(), SweetAlertDialog.WARNING_TYPE)
                     .setTitleText("Oops...")
-                    .setContentText("لست متصلا بالأنترنت !")
-                    .show();
+                    .setContentText("لست متصلا بالأنترنت !");
+            dialog.setOnShowListener(new DialogInterface.OnShowListener()
+            {
+                @Override
+                public void onShow(DialogInterface dialogInterface) {
+                    utils.useTextToSpeech("makaynach internet");
+                }
+
+            });
+
+            dialog.show();
         }
         lvStoredData = (ListView) view.findViewById(R.id.lvStoredData);
         listStoredData = new ArrayList<>();
@@ -177,9 +207,10 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
         super.onDetach();
         mListener = null;
     }
+
     @Override
-    public void onPause(){
-        if(textToSpeech !=null){
+    public void onPause() {
+        if (textToSpeech != null) {
             textToSpeech.stop();
             textToSpeech.shutdown();
         }
@@ -195,7 +226,7 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
                 ArrayList<Point> pointsList = pointsBDD.getAllPoint();
                 pointsBDD.close();
 
-                Map<String, ArrayList<Point>> pts = new HashMap<>();
+                Map<Object, ArrayList<Point>> pts = new HashMap<>();
                 DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                 Date date = new Date();
                 pts.put(dateFormat.format(date).replaceAll("\\.", "-"), pointsList);
@@ -225,7 +256,8 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
                                 // Write failed
                                 // ...
                             }
-                        });;
+                        });
+                ;
 
 
                 break;
