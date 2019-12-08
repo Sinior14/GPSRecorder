@@ -1,5 +1,6 @@
 package com.example.sinior.gpsrecorderv3.Beans;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 public class Point {
@@ -10,6 +11,8 @@ public class Point {
     private String createDate;
     private String stat;
     private boolean removed;
+    ArrayList<Point> ptsList;
+
 
     public Point() {
     }
@@ -20,6 +23,14 @@ public class Point {
         this.longtude = longtude;
         this.createDate = createDate;
         this.stat = stat;
+    }
+
+    public Point(Point point) {
+        this.id = point.id;
+        this.atitude = point.atitude;
+        this.longtude = point.longtude;
+        this.createDate = point.createDate;
+        this.stat = point.stat;
     }
 
     public Point(String atitude, String longtude, String createDate, String stat) {
@@ -75,5 +86,13 @@ public class Point {
 
     public void setRemoved(boolean removed) {
         this.removed = removed;
+    }
+
+    public ArrayList<Point> getPtsList() {
+        return ptsList;
+    }
+
+    public void setPtsList(ArrayList<Point> ptsList) {
+        this.ptsList = ptsList;
     }
 }

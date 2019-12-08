@@ -91,4 +91,12 @@ public class Utils {
     public void useTextToSpeech(String message) {
         textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null);
     }
+
+    public static ArrayList<Point> cloneList(ArrayList<Point> dogList) {
+        ArrayList<Point> clonedList = new ArrayList<Point>(dogList.size());
+        for (Point dog : dogList) {
+            clonedList.add(new Point(dog));
+        }
+        return clonedList;
+    }
 }

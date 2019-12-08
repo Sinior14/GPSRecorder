@@ -25,6 +25,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 
 import java.text.DateFormat;
@@ -62,7 +63,8 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
     private FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
     private DatabaseReference mDatabaseReference = mDatabase.getReference();
     Button btnNewStore;
-    ArrayList<Map<String, Point>> listStoredData;
+    ArrayList<HashMap<String, Point>> listStoredData;
+    ArrayList<Map<String, ArrayList<Point>>> listOfCurrentDateItems;
     ListView lvStoredData;
     StoredDataAdapter adapter;
     TextToSpeech textToSpeech;
@@ -110,31 +112,16 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
                 listStoredData = new ArrayList<>();
 
                 for (DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
-                    //user = singleSnapshot.getValue(User.class);
-                    // Map<String, Point> listStoredData = new HashMap<>();
 
-                    listStoredData.add((Map<String, Point>) singleSnapshot.getValue());
-                    //listStoredData.put(singleSnapshot)
-                    //System.out.println(singleSnapshot);
+                    HashMap<String, Point> pts = new HashMap<>();
+                    Point ptsList =  singleSnapshot.getValue(Point.class);
+                    String itemKey = singleSnapshot.getKey().toString();
+                    pts.put(itemKey, ptsList);
+                    listStoredData.add(pts);
                 }
                 adapter = new StoredDataAdapter(getActivity(), listStoredData);
                 System.out.println("listStoredData");
                 System.out.println(listStoredData);
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                    List<Object> temp = listStoredData.stream().filter(new Predicate<Map<String, Point>>() {
-                        @Override
-                        public boolean test(Map<String, Point> item) {
-                            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                            Date date = new Date();
-                            return item.entrySet().iterator().next().getKey().contains(dateFormat.format(date).replaceAll("\\.", "-"));
-                        }
-                    }).collect(Collectors.toList());
-
-                    ArrayList<Map<String, Point>> listOfCurrentDateItems = new ArrayList(temp);
-
-                    System.out.println("listOfCurrentDateItems");
-                    System.out.println(listOfCurrentDateItems);
-                }
                 lvStoredData.setAdapter(adapter);
                 //User user = dataSnapshot.getValue(User.class);
 
@@ -184,6 +171,27 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
         return view;
     }
 
+
+    public int getLengthOfCurrentDateItems(){
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            List<Object> temp = listStoredData.stream().filter(new Predicate<Map<String, Point>>() {
+                @Override
+                public boolean test(Map<String, Point> item) {
+                    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                    Date date = new Date();
+                    return item.entrySet().iterator().next().getKey().contains(dateFormat.format(date).replaceAll("\\.", "-"));
+                }
+            }).collect(Collectors.toList());
+
+            listOfCurrentDateItems = new ArrayList(temp);
+
+            System.out.println("listOfCurrentDateItems");
+            System.out.println(listOfCurrentDateItems);
+        }
+
+        return listOfCurrentDateItems.size();
+    }
+
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
@@ -221,15 +229,17 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnNewStore:
+                Point pointsList = new Point();
                 final PointsBDD pointsBDD = new PointsBDD(getActivity());
                 pointsBDD.open();
-                ArrayList<Point> pointsList = pointsBDD.getAllPoint();
+                pointsList.setPtsList(pointsBDD.getAllPoint());
                 pointsBDD.close();
 
-                Map<Object, ArrayList<Point>> pts = new HashMap<>();
+                Map<Object, Point> pts = new HashMap<Object, Point>();
                 DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                 Date date = new Date();
-                pts.put(dateFormat.format(date).replaceAll("\\.", "-"), pointsList);
+                String itemKey = dateFormat.format(date).replaceAll("\\.", "-") + " (" + getLengthOfCurrentDateItems() + ")";
+                pts.put(itemKey, pointsList);
                 DatabaseReference ref = mDatabase.getReference().child("bika");
                 ref.push().setValue(pts)
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
