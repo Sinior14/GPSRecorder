@@ -5,9 +5,11 @@ import android.content.Intent;
 import android.speech.tts.TextToSpeech;
 
 import com.example.sinior.gpsrecorderv3.Beans.Point;
+import com.google.firebase.database.DatabaseReference;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -98,5 +100,13 @@ public class Utils {
             clonedList.add(new Point(dog));
         }
         return clonedList;
+    }
+
+    public void removeListPointsDb(DatabaseReference db, String key, String id) {
+        db.child(id).child(key).child("removed").setValue(true);
+        /*point.setRemoved(true);
+        HashMap<String, Object> childUpdates = new HashMap<>();
+        childUpdates.put(key, point);
+        db.updateChildren(childUpdates);*/
     }
 }

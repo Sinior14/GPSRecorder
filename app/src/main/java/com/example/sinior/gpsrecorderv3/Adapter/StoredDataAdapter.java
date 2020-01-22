@@ -3,7 +3,10 @@ package com.example.sinior.gpsrecorderv3.Adapter;
 
 import android.app.FragmentTransaction;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Build;
+import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,12 +26,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class StoredDataAdapter extends ArrayAdapter {
+    private ArrayList<String> listOfDbKey;
     ArrayList<HashMap<String, Point>> storedData;
     Context context;
     FragmentTransaction frgmtTrans;
@@ -36,14 +42,15 @@ public class StoredDataAdapter extends ArrayAdapter {
     private DatabaseReference mDatabaseReference = mDatabase.getReference();
     private Utils utils;
 
-    public StoredDataAdapter(Context context, ArrayList<HashMap<String, Point>> storedData) {
+    public StoredDataAdapter(Context context, ArrayList<HashMap<String, Point>> storedData, ArrayList<String> listOfDbKey) {
         super(context, 0, storedData);
         this.storedData = storedData;
         this.context = context;
+        this.listOfDbKey = listOfDbKey;
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, ViewGroup parent) {
         // Get the data item for this position
 
 
@@ -51,8 +58,9 @@ public class StoredDataAdapter extends ArrayAdapter {
         if (convertView == null) {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.stored_item, parent, false);
         }
-
-            final Map<String, Point> dataItem = storedData.get(position);
+            final int index = position;
+            final HashMap<String, Point> dataItem = storedData.get(position);
+            final String itemKey = dataItem.keySet().toArray()[0].toString();
             // Lookup view for data population
             TextView tvStoredDate = (TextView) convertView.findViewById(R.id.tvStoreDate);
             TextView tvNbrItem = (TextView) convertView.findViewById(R.id.tvNbrItem);
@@ -77,40 +85,33 @@ public class StoredDataAdapter extends ArrayAdapter {
                 @RequiresApi(api = Build.VERSION_CODES.N)
                 @Override
                 public void onClick(View view) {
-                    mDatabaseReference = mDatabase.getReference().child("bika");
+                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
+                    // Setting Dialog Title
+                    alertDialog.setTitle("عملية المسح");
+                    // Setting Dialog Message
+                    alertDialog.setMessage("هل أنت متأكد من ذلك ؟ " );
+                    // On pressing Settings button
 
-                    HashMap<String, Object> updateItem = new HashMap<>();
-                    //dataItem.entrySet().iterator().next().getValue().setRemoved(true);
-                    //updateItem.put(dataItem.entrySet().iterator().next().getKey(), dataItem.entrySet().iterator().next().getValue());
-                   // mDatabaseReference.setValue(dataItem.entrySet().iterator().next().getKey(), dataItem.entrySet().iterator().next().getValue());
-                    System.out.println("dataItem");
-                    System.out.println(dataItem.values().);
-                    Iterator it = dataItem.entrySet().iterator();
-                    ArrayList<Point> pointsList = null;
-                    while (it.hasNext()) {
-                        Map.Entry pair = (Map.Entry)it.next();
-                        System.out.println(pair.getKey() + " = " + pair.getValue());
-                        Point listPts = new Point();
-                        listPts = dataItem.get(pair.getKey());
-                        System.out.println("listPts = " + listPts.getPtsList());
-                        System.out.println("pair.getKey() = " + pair.getKey());
-                        System.out.println("listPts = " + listPts.getClass());
-                    }
+                    alertDialog.setPositiveButton("تأكيد", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog,int which) {
+                            mDatabaseReference = mDatabase.getReference().child("bika");
+                            utils.removeListPointsDb(mDatabaseReference, itemKey, listOfDbKey.get(index));
+                        }
+                    });
+                    // on pressing cancel button
+                    alertDialog.setNegativeButton("إلغاء", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                                dialog.dismiss();
+                        }
+                    });
+                    alertDialog.show();
 
-                    /*final PointsBDD pointsBDD = new PointsBDD(context);
-                    pointsBDD.open();
-                    pointsBDD.removePointWithID(Pt.getId());
-                    pointsBDD.close();
-
-                    final FragmentManager fragmentManager = ((Activity) context).getFragmentManager();
-                    frgmtTrans = fragmentManager.beginTransaction();
-                    frgmtTrans.replace(R.id.content_frame, new ListPoints());
-                    frgmtTrans.commit();*/
                 }
             });
             // Populate the data into the template view using the data object
-            tvStoredDate.setText(dataItem.entrySet().iterator().next().getKey());
-            tvNbrItem.setText(dataItem.entrySet().iterator().next().getKey());
+            tvStoredDate.setText(itemKey);
+            tvNbrItem.setText(itemKey);
 
         return convertView;
     }

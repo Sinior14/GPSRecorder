@@ -5,7 +5,7 @@ import java.util.Date;
 
 public class Point {
 
-    private int id;
+    public int id;
     private String atitude;
     private String longtude;
     private String createDate;
@@ -80,7 +80,7 @@ public class Point {
         this.stat = stat;
     }
 
-    public boolean isRemoved() {
+    public boolean getRemoved() {
         return removed;
     }
 

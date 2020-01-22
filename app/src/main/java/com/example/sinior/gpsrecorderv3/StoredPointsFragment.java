@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
 import android.app.Fragment;
@@ -27,10 +28,13 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
+import com.google.gson.Gson;
+
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +44,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import cn.pedant.SweetAlert.SweetAlertDialog;
 
 
@@ -65,6 +70,7 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
     Button btnNewStore;
     ArrayList<HashMap<String, Point>> listStoredData;
     ArrayList<Map<String, ArrayList<Point>>> listOfCurrentDateItems;
+    ArrayList<String> listOfDbKeys;
     ListView lvStoredData;
     StoredDataAdapter adapter;
     TextToSpeech textToSpeech;
@@ -103,27 +109,42 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_stored_points, container, false);
         utils = new Utils(view.getContext());
+        lvStoredData = (ListView) view.findViewById(R.id.lvStoredData);
+        listStoredData = new ArrayList<>();
+        listOfDbKeys = new ArrayList<>();
+        adapter = new StoredDataAdapter(getActivity(), listStoredData, listOfDbKeys);
+        lvStoredData.setAdapter(adapter);
         btnNewStore = (Button) view.findViewById(R.id.btnNewStore);
         btnNewStore.setOnClickListener(this);
         mDatabaseReference = mDatabase.getReference().child("bika");
         mDatabaseReference.addValueEventListener(new ValueEventListener() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 listStoredData = new ArrayList<>();
-
+                listOfDbKeys = new ArrayList<>();
                 for (DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
-
                     HashMap<String, Point> pts = new HashMap<>();
-                    Point ptsList =  singleSnapshot.getValue(Point.class);
-                    String itemKey = singleSnapshot.getKey().toString();
-                    pts.put(itemKey, ptsList);
-                    listStoredData.add(pts);
+                    HashMap<String, Point> ptsList = (HashMap<String, Point>) singleSnapshot.getValue();
+                    String itemKey = ptsList.keySet().toArray()[0].toString();
+
+                    Gson gson = new Gson();
+                    String jsonString = gson.toJson(ptsList);
+                    jsonString = String.join(":", Arrays.copyOfRange(jsonString.split(":"), 1, jsonString.split(":").length)) ;
+                    jsonString = String.join("", jsonString.split("],\"id\"")[0]) ;
+                    jsonString = jsonString + "]}";
+                    jsonString = jsonString.replaceAll("\"\"", "\":\"");
+
+                    Point pt = gson.fromJson(jsonString, Point.class);
+                    if(!pt.getRemoved()){
+                        listOfDbKeys.add(singleSnapshot.getKey());
+                        pts.put(itemKey, pt);
+                        listStoredData.add(pts);
+                    }
+
                 }
-                adapter = new StoredDataAdapter(getActivity(), listStoredData);
-                System.out.println("listStoredData");
-                System.out.println(listStoredData);
+                adapter = new StoredDataAdapter(getActivity(), listStoredData, listOfDbKeys);
                 lvStoredData.setAdapter(adapter);
-                //User user = dataSnapshot.getValue(User.class);
 
             }
 
@@ -161,12 +182,6 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
 
             dialog.show();
         }
-        lvStoredData = (ListView) view.findViewById(R.id.lvStoredData);
-        listStoredData = new ArrayList<>();
-        adapter = new StoredDataAdapter(getActivity(), listStoredData);
-        lvStoredData
-                .setAdapter(adapter);
-
 
         return view;
     }
@@ -184,9 +199,6 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
             }).collect(Collectors.toList());
 
             listOfCurrentDateItems = new ArrayList(temp);
-
-            System.out.println("listOfCurrentDateItems");
-            System.out.println(listOfCurrentDateItems);
         }
 
         return listOfCurrentDateItems.size();
@@ -235,7 +247,7 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
                 pointsList.setPtsList(pointsBDD.getAllPoint());
                 pointsBDD.close();
 
-                Map<Object, Point> pts = new HashMap<Object, Point>();
+                Map<String, Point> pts = new HashMap<String, Point>();
                 DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                 Date date = new Date();
                 String itemKey = dateFormat.format(date).replaceAll("\\.", "-") + " (" + getLengthOfCurrentDateItems() + ")";
