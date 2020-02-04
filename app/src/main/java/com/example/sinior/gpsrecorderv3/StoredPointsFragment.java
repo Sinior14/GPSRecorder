@@ -67,7 +67,7 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
     private String mParam2;
     private FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
     private DatabaseReference mDatabaseReference = mDatabase.getReference();
-    Button btnNewStore;
+    Button btnNewStore, btnDeleteAllStore;
     ArrayList<HashMap<String, Point>> listStoredData;
     ArrayList<Map<String, ArrayList<Point>>> listOfCurrentDateItems;
     ArrayList<String> listOfDbKeys;
@@ -75,6 +75,7 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
     StoredDataAdapter adapter;
     TextToSpeech textToSpeech;
     private Utils utils;
+    HashMap<String, Point> pts;
 
 
     private OnFragmentInteractionListener mListener;
@@ -116,6 +117,9 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
         lvStoredData.setAdapter(adapter);
         btnNewStore = (Button) view.findViewById(R.id.btnNewStore);
         btnNewStore.setOnClickListener(this);
+        btnDeleteAllStore = (Button) view.findViewById(R.id.btnDeleteAllStore);
+        btnDeleteAllStore.setOnClickListener(this);
+
         mDatabaseReference = mDatabase.getReference().child("bika");
         mDatabaseReference.addValueEventListener(new ValueEventListener() {
             @RequiresApi(api = Build.VERSION_CODES.O)
@@ -124,7 +128,7 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
                 listStoredData = new ArrayList<>();
                 listOfDbKeys = new ArrayList<>();
                 for (DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
-                    HashMap<String, Point> pts = new HashMap<>();
+                    pts = new HashMap<>();
                     HashMap<String, Point> ptsList = (HashMap<String, Point>) singleSnapshot.getValue();
                     String itemKey = ptsList.keySet().toArray()[0].toString();
 
@@ -289,13 +293,11 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
                         .setCancelable(false)
                         .setPositiveButton("نعم", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                /*final PointsBDD pointsBDD = new PointsBDD(getActivity());
-                                pointsBDD.open();
-                                pointsBDD.removeAllPoints();
-                                pointsList = pointsBDD.getAllPoint();
-                                adapter = new PointsAdapter(getActivity(), pointsList);
-                                lvPoints.setAdapter(adapter);
-                                pointsBDD.close();*/
+                                for(int i=0; i< listStoredData.size(); i++){
+                                    String itemKey = listStoredData.get(i).keySet().toArray()[0].toString();
+                                    mDatabaseReference = mDatabase.getReference().child("bika");
+                                    utils.removeListPointsDb(mDatabaseReference, itemKey, listOfDbKeys.get(i));
+                                }
                             }
                         })
                         .setNegativeButton("لا", null)

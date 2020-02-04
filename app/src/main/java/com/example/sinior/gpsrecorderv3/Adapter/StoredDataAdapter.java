@@ -1,6 +1,8 @@
 package com.example.sinior.gpsrecorderv3.Adapter;
 
 
+import android.app.Activity;
+import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -15,7 +17,9 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.sinior.gpsrecorderv3.BDD.PointsBDD;
 import com.example.sinior.gpsrecorderv3.Beans.Point;
+import com.example.sinior.gpsrecorderv3.ListPoints;
 import com.example.sinior.gpsrecorderv3.R;
 import com.example.sinior.gpsrecorderv3.Tools.Utils;
 import com.google.firebase.database.DatabaseReference;
@@ -71,14 +75,40 @@ public class StoredDataAdapter extends ArrayAdapter {
             tvRestore.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                   /* MapFragement mapFragement = new MapFragement();
-                    final FragmentManager fragmentManager = ((Activity) context).getFragmentManager();
-                    frgmtTrans = fragmentManager.beginTransaction();
-                    mapFragement.point = Pt;
-                    // set Fragmentclass Arguments
-                    // mapFragement.setArguments(bundle);
-                    frgmtTrans.replace(R.id.content_frame, mapFragement);
-                    frgmtTrans.commit();*/
+                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
+                    // Setting Dialog Title
+                    alertDialog.setTitle("عملية الإستعادة");
+                    // Setting Dialog Message
+                    alertDialog.setMessage("هل أنت متأكد من ذلك ؟ " );
+                    // On pressing Settings button
+
+                    alertDialog.setPositiveButton("تأكيد", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog,int which) {
+                            final PointsBDD pointsBDD = new PointsBDD(context);
+                            pointsBDD.open();
+                            for (Map.Entry<String, Point> entry : dataItem.entrySet()) {
+
+                                for(Point item : entry.getValue().getPtsList()){
+                                    pointsBDD.insertPoint(item);
+                                }
+                            }
+
+                            pointsBDD.close();
+                            final FragmentManager fragmentManager = ((Activity) context).getFragmentManager();
+                            frgmtTrans = fragmentManager.beginTransaction();
+                            frgmtTrans.replace(R.id.content_frame, new ListPoints());
+                            frgmtTrans.commit();
+                        }
+                    });
+                    // on pressing cancel button
+                    alertDialog.setNegativeButton("إلغاء", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                            dialog.dismiss();
+                        }
+                    });
+                    alertDialog.show();
+
                 }
             });
             btnDeleteItem.setOnClickListener(new View.OnClickListener() {
