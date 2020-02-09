@@ -4,6 +4,7 @@ import android.app.FragmentManager;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
@@ -15,6 +16,8 @@ import android.widget.TextView;
 
 import com.example.sinior.gpsrecorderv3.Tools.Utils;
 import com.google.android.gms.maps.MapFragment;
+
+import androidx.annotation.RequiresApi;
 
 
 /**
@@ -132,6 +135,7 @@ public class MenuFragment extends Fragment implements View.OnClickListener  {
         mListener = null;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Override
     public void onClick(View view) {
         //creating fragment object

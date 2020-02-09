@@ -94,7 +94,9 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.menuListPoint) {
             fm.beginTransaction().replace(R.id.content_frame, new ListPoints()).commit();
         } else if (id == R.id.menuRestore) {
-            fm.beginTransaction().replace(R.id.content_frame, new MapFragement()).commit();
+            fm.beginTransaction().replace(R.id.content_frame, new StoredPointsFragment()).commit();
+        } else if (id == R.id.menuHome) {
+            fm.beginTransaction().replace(R.id.content_frame, new MenuFragment()).commit();
         } else if (id == R.id.menuExit) {
             System.exit(1);
         }

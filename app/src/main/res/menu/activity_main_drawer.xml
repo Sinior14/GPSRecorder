@@ -16,6 +16,11 @@
             android:id="@+id/menuRestore"
             android:icon="@drawable/discmenu"
             android:title="إستعادة" />
+
+        <item
+            android:id="@+id/menuHome"
+            android:icon="@drawable/icon_home"
+            android:title="الصفحة الرئيسية" />
         <item
             android:id="@+id/menuExit"
             android:icon="@drawable/exitmenu"

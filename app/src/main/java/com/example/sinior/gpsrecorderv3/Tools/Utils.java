@@ -1,17 +1,15 @@
 package com.example.sinior.gpsrecorderv3.Tools;
 
 import android.content.Context;
-import android.content.Intent;
 import android.speech.tts.TextToSpeech;
 
 import com.example.sinior.gpsrecorderv3.Beans.Point;
 import com.google.firebase.database.DatabaseReference;
 
-import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import android.app.Fragment;
 
 public class Utils {
 
@@ -100,6 +98,12 @@ public class Utils {
             clonedList.add(new Point(dog));
         }
         return clonedList;
+    }
+
+    public void destroyFragment(Fragment fragment){
+        if(fragment != null){
+            //getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+        }
     }
 
     public void removeListPointsDb(DatabaseReference db, String key, String id) {

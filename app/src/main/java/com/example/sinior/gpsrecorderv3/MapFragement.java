@@ -1,12 +1,16 @@
 package com.example.sinior.gpsrecorderv3;
 
+import android.Manifest;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.view.LayoutInflater;
@@ -17,19 +21,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.example.sinior.gpsrecorderv3.Adapter.PointsAdapter;
 import com.example.sinior.gpsrecorderv3.BDD.PointsBDD;
 import com.example.sinior.gpsrecorderv3.Beans.Point;
 import com.example.sinior.gpsrecorderv3.Tools.GpsTracker;
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.MapView;
-import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CustomCap;
 import com.google.android.gms.maps.model.LatLng;
@@ -46,6 +44,8 @@ import java.util.List;
 import java.util.Locale;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
 
 
 public class MapFragement extends Fragment implements LocationListener, OnMapReadyCallback {
@@ -65,6 +65,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
         return inflater.inflate(R.layout.fragment_map_fragement, container, false);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -74,6 +75,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
             fragment = (MapFragment) getChildFragmentManager().findFragmentById(R.id.map);
         }
         fragment.getMapAsync(this);
+        locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
         // Setting a click event handler for the map
         this.listPoints.add(point);
 
@@ -97,7 +99,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
             } else if (point != null) {
                 this.drawPolyline(listPoints);
             }
-        }else if (itemId == R.id.optAddPoint) {
+        } else if (itemId == R.id.optAddPoint) {
             this.addPoint();
         }
         return super.onOptionsItemSelected(item);
@@ -105,12 +107,13 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
-        MenuItem item=menu.findItem(R.id.drawPolyline);
-        if((item!=null && getArguments() != null && !getArguments().getBoolean("multiRoutes")) || point == null ){
+        MenuItem item = menu.findItem(R.id.drawPolyline);
+        if ((item != null && getArguments() != null && !getArguments().getBoolean("multiRoutes")) || point == null) {
             item.setVisible(false);
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -125,6 +128,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
         if (mMap != null) {
             mMap.getUiSettings().setMapToolbarEnabled(true);
         }
+        mMap.setMyLocationEnabled(true);
         if (getArguments() != null && getArguments().getBoolean("multiRoutes") == true) {
             final PointsBDD pointsBDD = new PointsBDD(getActivity());
             pointsBDD.open();
@@ -135,6 +139,13 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
             //this.drawPolyline(listPoints);
         }
         this.getLocation();
+        if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+            return;
+        }
+
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000, 5, this);
+        onLocationChanged(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
 
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
 
@@ -210,18 +221,18 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
 
         latitude = Float.parseFloat(point.getAtitude());
         longitude = Float.parseFloat(point.getLongtude());
-        LatLng latlang = new LatLng(latitude, longitude);
+        LatLng latlang = new LatLng(latitude, longitude + 0.05000);
 
         if (currentLocation) {
             this.currentLocationMarker = mMap.addMarker(new MarkerOptions()
                     .position(latlang)
                     .title("موقعي")
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
         } else {
             marker = mMap.addMarker(new MarkerOptions()
                     .position(latlang)
                     .title(point.getCreateDate())
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.anchor)));
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.target)));
         }
 
 
@@ -269,9 +280,24 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
 
     @Override
     public void onLocationChanged(Location location) {
+        Toast.makeText(getActivity(), "tbadlt", Toast.LENGTH_SHORT).show();
 
+        System.out.println(currentLocation);
+        if (currentLocation == null) {
+            currentLocation = new Point();
+        }
         currentLocation.setAtitude(String.valueOf(location.getLatitude()));
         currentLocation.setLongtude(String.valueOf(location.getLongitude()));
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        if(currentLocationMarker == null){
+            currentLocationMarker = mMap.addMarker(new MarkerOptions()
+                    .position(latLng)
+                    .title("موقعي")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
+        }else{
+            currentLocationMarker.setPosition(latLng);
+        }
+
         try {
             Geocoder geocoder = new Geocoder(MainActivity.getAppContext(), Locale.getDefault());
             List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
@@ -279,6 +305,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
                     addresses.get(0).getAddressLine(1) + ", " + addresses.get(0).getAddressLine(2));*/
             currentLocation.setAtitude(String.valueOf(location.getLatitude()));
             currentLocation.setLongtude(String.valueOf(location.getLongitude()));
+
         } catch (Exception e) {
 
         }
@@ -316,7 +343,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
                 pointsBDD.open();
                 p.setCreateDate(date);
                 p.setStat("true");
-                if (pointsBDD.insertPoint(p) > 0){
+                if (pointsBDD.insertPoint(p) > 0) {
                     System.out.println("Ajouter bien fait");
                     Toast.makeText(getActivity(), "تم حفظ النقطة", Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
