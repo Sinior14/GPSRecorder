@@ -77,8 +77,9 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
         fragment.getMapAsync(this);
         locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
         // Setting a click event handler for the map
-        this.listPoints.add(point);
-
+        if(point != null){
+            this.listPoints.add(point);
+        }
     }
 
     @Override
@@ -271,7 +272,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
         }
 
         Polyline line = mMap.addPolyline(options);
-        this.currentLocationMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.arrow));
+        this.currentLocationMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.map_navigation));
         line.setEndCap(
                 new CustomCap(BitmapDescriptorFactory.fromResource(R.drawable.arrow),
                         16));
@@ -280,8 +281,6 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
 
     @Override
     public void onLocationChanged(Location location) {
-        Toast.makeText(getActivity(), "tbadlt", Toast.LENGTH_SHORT).show();
-
         System.out.println(currentLocation);
         if (currentLocation == null) {
             currentLocation = new Point();
@@ -297,18 +296,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
         }else{
             currentLocationMarker.setPosition(latLng);
         }
-
-        try {
-            Geocoder geocoder = new Geocoder(MainActivity.getAppContext(), Locale.getDefault());
-            List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
-            /*tvLatitude.setText(tvLatitude.getText() + "\n" + addresses.get(0).getAddressLine(0) + ", " +
-                    addresses.get(0).getAddressLine(1) + ", " + addresses.get(0).getAddressLine(2));*/
-            currentLocation.setAtitude(String.valueOf(location.getLatitude()));
-            currentLocation.setLongtude(String.valueOf(location.getLongitude()));
-
-        } catch (Exception e) {
-
-        }
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng,17));
 
     }
 
