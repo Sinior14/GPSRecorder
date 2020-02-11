@@ -13,12 +13,16 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Handler;
+import android.os.SystemClock;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Interpolator;
+import android.view.animation.LinearInterpolator;
 import android.widget.Toast;
 
 import com.example.sinior.gpsrecorderv3.BDD.PointsBDD;
@@ -40,8 +44,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
-import java.util.Locale;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -57,6 +59,8 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
     private ArrayList<Point> listPoints = new ArrayList<Point>();
     LocationManager locationManager;
     Marker currentLocationMarker;
+    private boolean isMarkerRotating;
+    private LatLng oldLocation, newLocaation;
 
     @Nullable
     @Override
@@ -77,7 +81,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
         fragment.getMapAsync(this);
         locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
         // Setting a click event handler for the map
-        if(point != null){
+        if (point != null) {
             this.listPoints.add(point);
         }
     }
@@ -129,7 +133,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
         if (mMap != null) {
             mMap.getUiSettings().setMapToolbarEnabled(true);
         }
-        mMap.setMyLocationEnabled(true);
+        //mMap.setMyLocationEnabled(true);
         if (getArguments() != null && getArguments().getBoolean("multiRoutes") == true) {
             final PointsBDD pointsBDD = new PointsBDD(getActivity());
             pointsBDD.open();
@@ -141,7 +145,6 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
         }
         this.getLocation();
         if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
             return;
         }
 
@@ -207,7 +210,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
             markers.add(mMap.addMarker(new MarkerOptions()
                     .position(latlang)
                     .title(point.getCreateDate())
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.anchor))));
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.target))));
         }
     }
 
@@ -222,7 +225,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
 
         latitude = Float.parseFloat(point.getAtitude());
         longitude = Float.parseFloat(point.getLongtude());
-        LatLng latlang = new LatLng(latitude, longitude + 0.05000);
+        LatLng latlang = new LatLng(latitude, longitude);
 
         if (currentLocation) {
             this.currentLocationMarker = mMap.addMarker(new MarkerOptions()
@@ -251,12 +254,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
     }
 
     private void drawPolyline(ArrayList<Point> listPoints) {
-        PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
-        for (int z = 0; z < listPoints.size(); z++) {
-            LatLng point = new LatLng(Float.parseFloat(listPoints.get(z).getAtitude()), Float.parseFloat(listPoints.get(z).getLongtude()));
-            options.add(point);
-        }
-
+        PolylineOptions options = new PolylineOptions().width(8).color(Color.RED);
         // add current location
         GpsTracker tracker = new GpsTracker(getActivity());
         if (!tracker.canGetLocation()) {
@@ -270,34 +268,51 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
             LatLng point = new LatLng(tracker.getLatitude(), tracker.getLongitude());
             options.add(point);
         }
+        for (int z = 0; z < listPoints.size(); z++) {
+            LatLng point = new LatLng(Float.parseFloat(listPoints.get(z).getAtitude()), Float.parseFloat(listPoints.get(z).getLongtude()));
+            options.add(point);
+        }
+
+
 
         Polyline line = mMap.addPolyline(options);
         this.currentLocationMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.map_navigation));
-        line.setEndCap(
+       /* line.setEndCap(
                 new CustomCap(BitmapDescriptorFactory.fromResource(R.drawable.arrow),
-                        16));
+                        16));*/
     }
 
 
     @Override
     public void onLocationChanged(Location location) {
-        System.out.println(currentLocation);
-        if (currentLocation == null) {
-            currentLocation = new Point();
-        }
-        currentLocation.setAtitude(String.valueOf(location.getLatitude()));
-        currentLocation.setLongtude(String.valueOf(location.getLongitude()));
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        if(currentLocationMarker == null){
-            currentLocationMarker = mMap.addMarker(new MarkerOptions()
-                    .position(latLng)
-                    .title("موقعي")
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
-        }else{
-            currentLocationMarker.setPosition(latLng);
-        }
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng,17));
 
+        if (location != null) {
+            if (currentLocation == null) {
+                currentLocation = new Point();
+                oldLocation = latLng;
+            }else{
+                oldLocation = new LatLng(Float.parseFloat(currentLocation.getAtitude()), Float.parseFloat(currentLocation.getLongtude()));
+            }
+            currentLocation.setAtitude(String.valueOf(location.getLatitude()));
+            currentLocation.setLongtude(String.valueOf(location.getLongitude()));
+
+            newLocaation = latLng;
+            if (currentLocationMarker == null) {
+                currentLocationMarker = mMap.addMarker(new MarkerOptions()
+                        .position(latLng)
+                        .title("موقعي")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
+                currentLocationMarker.setFlat(true);
+            } else {
+                currentLocationMarker.setPosition(latLng);
+            }
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17));
+        }
+
+
+        float bearing = (float) bearingBetweenLocations(oldLocation, newLocaation );
+        rotateMarker(currentLocationMarker, bearing);
     }
 
     @Override
@@ -345,6 +360,62 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
             e.printStackTrace();
         }
 
+    }
+
+    private void rotateMarker(final Marker marker, final float toRotation) {
+        if(!isMarkerRotating) {
+            final Handler handler = new Handler();
+            final long start = SystemClock.uptimeMillis();
+            final float startRotation = marker.getRotation();
+            final long duration = 2000;
+
+            final Interpolator interpolator = new LinearInterpolator();
+
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    isMarkerRotating = true;
+
+                    long elapsed = SystemClock.uptimeMillis() - start;
+                    float t = interpolator.getInterpolation((float) elapsed / duration);
+
+                    float rot = t * toRotation + (1 - t) * startRotation;
+
+                    float bearing =  -rot > 180 ? rot / 2 : rot;
+
+                    marker.setRotation(bearing);
+
+                    if (t < 1.0) {
+                        // Post again 16ms later.
+                        handler.postDelayed(this, 16);
+                    } else {
+                        isMarkerRotating = false;
+                    }
+                }
+            });
+        }
+    }
+
+    private double bearingBetweenLocations(LatLng latLng1,LatLng latLng2) {
+
+        double PI = 3.14159;
+        double lat1 = latLng1.latitude * PI / 180;
+        double long1 = latLng1.longitude * PI / 180;
+        double lat2 = latLng2.latitude * PI / 180;
+        double long2 = latLng2.longitude * PI / 180;
+
+        double dLon = (long2 - long1);
+
+        double y = Math.sin(dLon) * Math.cos(lat2);
+        double x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1)
+                * Math.cos(lat2) * Math.cos(dLon);
+
+        double brng = Math.atan2(y, x);
+
+        brng = Math.toDegrees(brng);
+        brng = (brng + 360) % 360;
+
+        return brng;
     }
 
 
