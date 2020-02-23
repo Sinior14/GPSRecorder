@@ -17,4 +17,6 @@
     <string name="applicationName">GPS Recorder</string>
     <string name="Phone">00212 6.99.06.22.66</string>
     <string name="logo">Logo</string>
+    <string name="login_name_hint">Name</string>
+    <string name="login_password_hint">Password</string>
 </resources>

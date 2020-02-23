@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity
         FragmentManager fm = getFragmentManager();
         fm.beginTransaction().add(R.id.content_frame, new MenuFragment()).commit();
 
+
     }
 
     @Override

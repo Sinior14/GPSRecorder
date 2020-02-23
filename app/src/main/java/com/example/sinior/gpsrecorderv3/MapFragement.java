@@ -56,6 +56,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
     public static Point point;
     public static Point currentLocation;
     public static boolean multiView;
+    public static boolean onlyCurrentLocation;
     private ArrayList<Point> listPoints = new ArrayList<Point>();
     LocationManager locationManager;
     Marker currentLocationMarker;
@@ -303,16 +304,20 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
                         .position(latLng)
                         .title("موقعي")
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
-                currentLocationMarker.setFlat(true);
+
             } else {
                 currentLocationMarker.setPosition(latLng);
+            }
+            if(this.listPoints.size() > 0){
+                currentLocationMarker.setFlat(true);
+                float bearing = (float) bearingBetweenLocations(oldLocation, newLocaation );
+                rotateMarker(currentLocationMarker, bearing);
             }
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17));
         }
 
 
-        float bearing = (float) bearingBetweenLocations(oldLocation, newLocaation );
-        rotateMarker(currentLocationMarker, bearing);
+
     }
 
     @Override
