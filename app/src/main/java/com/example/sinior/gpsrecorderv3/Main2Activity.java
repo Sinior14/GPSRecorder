@@ -9,11 +9,13 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
 import android.widget.EditText;
+import android.widget.ImageView;
 
 public class Main2Activity extends AppCompatActivity implements View.OnClickListener {
 
     View saveBtn;
     EditText edName;
+    ImageView mainExit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,16 +25,19 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
         getSupportActionBar().hide();
         setContentView(R.layout.activity_main2);
         SharedPreferences sharedPref = getSharedPreferences("myStoredName", MODE_PRIVATE);
-
         String myStoredName = sharedPref.getString("myStoredName", null);
+
         if(myStoredName != null ){
             Intent myIntent = new Intent(this, MainActivity.class);
             this.startActivity(myIntent);
+            finish();
         }
 
         saveBtn = (View) findViewById(R.id.btnRegister);
         edName = (EditText) findViewById(R.id.edName);
+        mainExit = (ImageView) findViewById(R.id.mainExit);
         saveBtn.setOnClickListener(this);
+        mainExit.setOnClickListener(this);
 
     }
 
@@ -40,7 +45,16 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnRegister:
-                System.out.println(edName.getText());
+                SharedPreferences sharedPref = getSharedPreferences("myStoredName", MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putString("myStoredName", edName.getText().toString());
+                editor.apply();
+                Intent myIntent = new Intent(this, MainActivity.class);
+                this.startActivity(myIntent);
+                finish();
+
+            case R.id.mainExit:
+                System.exit(1);
         }
     }
 }

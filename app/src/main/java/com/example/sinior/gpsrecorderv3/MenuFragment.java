@@ -139,6 +139,8 @@ public class MenuFragment extends Fragment implements View.OnClickListener  {
     @Override
     public void onClick(View view) {
         //creating fragment object
+        System.out.println("view.getId()");
+        System.out.println(view.getId());
         android.app.Fragment fragment = null;
         switch (view.getId()){
             case R.id.tvCurrentPlace:

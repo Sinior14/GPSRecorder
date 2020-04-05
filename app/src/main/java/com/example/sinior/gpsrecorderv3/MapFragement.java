@@ -5,8 +5,6 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.location.Address;
-import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -33,7 +31,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CustomCap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -266,6 +263,9 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
             }
             currentLocation.setAtitude(String.valueOf(tracker.getLatitude()));
             currentLocation.setLongtude(String.valueOf(tracker.getLongitude()));
+            LatLng latLng = new LatLng(tracker.getLatitude(), tracker.getLongitude());
+
+            currentLocationMarker.setPosition(latLng);
             LatLng point = new LatLng(tracker.getLatitude(), tracker.getLongitude());
             options.add(point);
         }

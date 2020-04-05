@@ -3,6 +3,7 @@ package com.example.sinior.gpsrecorderv3;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -65,6 +66,7 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+    private String myStoredName;
     private FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
     private DatabaseReference mDatabaseReference = mDatabase.getReference();
     Button btnNewStore, btnDeleteAllStore;
@@ -76,6 +78,7 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
     TextToSpeech textToSpeech;
     private Utils utils;
     HashMap<String, Point> pts;
+
 
 
     private OnFragmentInteractionListener mListener;
@@ -104,6 +107,7 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -119,8 +123,10 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
         btnNewStore.setOnClickListener(this);
         btnDeleteAllStore = (Button) view.findViewById(R.id.btnDeleteAllStore);
         btnDeleteAllStore.setOnClickListener(this);
+        SharedPreferences sharedPref = getContext().getSharedPreferences("myStoredName", Context.MODE_PRIVATE);
+        myStoredName = sharedPref.getString("myStoredName", null);
 
-        mDatabaseReference = mDatabase.getReference().child("bika");
+        mDatabaseReference = mDatabase.getReference().child(myStoredName);
         mDatabaseReference.addValueEventListener(new ValueEventListener() {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
@@ -256,7 +262,7 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
                 Date date = new Date();
                 String itemKey = dateFormat.format(date).replaceAll("\\.", "-") + " (" + getLengthOfCurrentDateItems() + ")";
                 pts.put(itemKey, pointsList);
-                DatabaseReference ref = mDatabase.getReference().child("bika");
+                DatabaseReference ref = mDatabase.getReference().child(myStoredName);
                 ref.push().setValue(pts)
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
@@ -295,7 +301,7 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
                             public void onClick(DialogInterface dialog, int id) {
                                 for(int i=0; i< listStoredData.size(); i++){
                                     String itemKey = listStoredData.get(i).keySet().toArray()[0].toString();
-                                    mDatabaseReference = mDatabase.getReference().child("bika");
+                                    mDatabaseReference = mDatabase.getReference().child(myStoredName);
                                     utils.removeListPointsDb(mDatabaseReference, itemKey, listOfDbKeys.get(i));
                                 }
                             }
