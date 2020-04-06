@@ -102,11 +102,11 @@ public class MenuFragment extends Fragment implements View.OnClickListener  {
         tvCurrentPlace.setOnClickListener(this);
         tvListPoints.setOnClickListener(this);
         tvExit.setOnClickListener(this);
-        tvSaveImport.setOnClickListener(this);
+        //tvSaveImport.setOnClickListener(this);
         imgExit.setOnClickListener(this);
         imgCurrentPlace.setOnClickListener(this);
         imgListPoints.setOnClickListener(this);
-        imgSavePoint.setOnClickListener(this);
+        //imgSavePoint.setOnClickListener(this);
 
         return view;
     }

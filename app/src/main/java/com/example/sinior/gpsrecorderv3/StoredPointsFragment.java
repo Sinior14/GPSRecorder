@@ -123,7 +123,7 @@ public class StoredPointsFragment extends Fragment implements View.OnClickListen
         btnNewStore.setOnClickListener(this);
         btnDeleteAllStore = (Button) view.findViewById(R.id.btnDeleteAllStore);
         btnDeleteAllStore.setOnClickListener(this);
-        SharedPreferences sharedPref = getContext().getSharedPreferences("myStoredName", Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = getActivity().getSharedPreferences("myStoredName", Context.MODE_PRIVATE);
         myStoredName = sharedPref.getString("myStoredName", null);
 
         mDatabaseReference = mDatabase.getReference().child(myStoredName);

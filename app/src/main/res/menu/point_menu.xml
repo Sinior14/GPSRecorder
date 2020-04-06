@@ -12,12 +12,12 @@
         mayApp:icon="@android:drawable/ic_menu_edit"
         android:title="@string/draw_route"
         android:icon="@drawable/add"
-        mayApp:showAsAction="ifRoom" />
+        mayApp:showAsAction="always" />
 
     <item
         android:id="@+id/optSynOrNot"
         mayApp:icon="@android:drawable/ic_menu_edit"
-        android:title="@string/draw_route"
-        android:icon="@drawable/add"
-        mayApp:showAsAction="ifRoom" />
+        android:title="@string/sync_route"
+        android:icon="@drawable/attach_red"
+        mayApp:showAsAction="always" />
 </menu>

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">GPS Recorder </string>
+    <string name="app_name">GPS RecorderA </string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">GPS Recorder</string>
@@ -13,6 +13,8 @@
     <string name="get_location">Get Location</string>
     <string name="get_route">get route</string>
     <string name="draw_route">رسم الطريق</string>
+    <string name="add_point">إضافة نقطة</string>
+    <string name="sync_route">تجديد الخط</string>
     <string name="email">younes.zaroual.92@gmail.com</string>
     <string name="applicationName">GPS Recorder</string>
     <string name="Phone">00212 6.99.06.22.66</string>

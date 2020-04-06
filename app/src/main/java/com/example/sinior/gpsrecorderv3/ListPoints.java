@@ -5,9 +5,12 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.view.LayoutInflater;
@@ -26,6 +29,9 @@ import com.example.sinior.gpsrecorderv3.Tools.Utils;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+
+import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
 
 
 public class ListPoints extends Fragment implements LocationListener, View.OnClickListener {
@@ -48,6 +54,7 @@ public class ListPoints extends Fragment implements LocationListener, View.OnCli
     private Utils utils;
     private Point nearsetPoint;
     private Double nearsetPointDistance;
+    LocationManager locationManager;
 
     private OnFragmentInteractionListener mListener;
 
@@ -76,6 +83,7 @@ public class ListPoints extends Fragment implements LocationListener, View.OnCli
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -112,6 +120,16 @@ public class ListPoints extends Fragment implements LocationListener, View.OnCli
                 tvDistance.setText(String.valueOf(df.format(this.nearsetPointDistance)));
             }
         }
+        locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(getActivity(),android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000, 5, this);
+            onLocationChanged(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
+        }else{
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 3000, 5, this);
+            onLocationChanged(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER));
+        }
+
 
 
         return view;
@@ -202,11 +220,17 @@ public class ListPoints extends Fragment implements LocationListener, View.OnCli
 
     @Override
     public void onLocationChanged(Location location) {
-        currentLocation.setAtitude(String.valueOf(location.getLatitude()));
-        currentLocation.setLongtude(String.valueOf(location.getLongitude()));
+        if(location != null){
+            currentLocation.setAtitude(String.valueOf(location.getLatitude()));
+            currentLocation.setLongtude(String.valueOf(location.getLongitude()));
 
-        Double distance = this.utils.meterDistanceBetweenPoints(Float.parseFloat(currentLocation.getAtitude()), Float.parseFloat(currentLocation.getLongtude()), 0, 0);
-        System.out.println("distance : " + distance);
+            if(nearsetPoint != null){
+                this.nearsetPointDistance = this.utils.meterDistanceBetweenPoints(Float.parseFloat(currentLocation.getAtitude()), Float.parseFloat(currentLocation.getLongtude()), Float.parseFloat(nearsetPoint.getAtitude()), Float.parseFloat(nearsetPoint.getLongtude()));
+                DecimalFormat df = new DecimalFormat("0.00");
+                tvDistance.setText(String.valueOf(df.format(this.nearsetPointDistance)));
+                System.out.println("distance : " + nearsetPointDistance);
+            }
+        }
     }
 
     @Override

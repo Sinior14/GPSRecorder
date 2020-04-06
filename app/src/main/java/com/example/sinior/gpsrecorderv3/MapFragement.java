@@ -13,6 +13,8 @@ import android.os.Bundle;
 import android.app.Fragment;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -26,6 +28,7 @@ import android.widget.Toast;
 import com.example.sinior.gpsrecorderv3.BDD.PointsBDD;
 import com.example.sinior.gpsrecorderv3.Beans.Point;
 import com.example.sinior.gpsrecorderv3.Tools.GpsTracker;
+import com.example.sinior.gpsrecorderv3.Tools.Utils;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -38,6 +41,7 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -58,7 +62,10 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
     LocationManager locationManager;
     Marker currentLocationMarker;
     private boolean isMarkerRotating;
+    private boolean enableAsynDraw, lineDrawed;
     private LatLng oldLocation, newLocaation;
+    private Polyline currentLine;
+    private Utils utils;
 
     @Nullable
     @Override
@@ -71,7 +78,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
+        utils = new Utils(view.getContext());
         MapFragment fragment = null;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
             fragment = (MapFragment) getChildFragmentManager().findFragmentById(R.id.map);
@@ -104,6 +111,16 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
             }
         } else if (itemId == R.id.optAddPoint) {
             this.addPoint();
+        } else if (itemId == R.id.optSynOrNot) {
+            if (!enableAsynDraw) {
+                item.setIcon(getResources().getDrawable(R.drawable.attach_green));
+                enableAsynDraw = true;
+            } else {
+                item.setIcon(getResources().getDrawable(R.drawable.attach_red));
+                enableAsynDraw = false;
+            }
+
+
         }
         return super.onOptionsItemSelected(item);
     }
@@ -142,7 +159,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
             //this.drawPolyline(listPoints);
         }
         this.getLocation();
-        if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
 
@@ -275,9 +292,14 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
         }
 
 
-
-        Polyline line = mMap.addPolyline(options);
+        if(currentLine != null){
+            currentLine.remove();
+        }
+        currentLine = mMap.addPolyline(options);
+        this.lineDrawed = true;
         this.currentLocationMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.map_navigation));
+
+
        /* line.setEndCap(
                 new CustomCap(BitmapDescriptorFactory.fromResource(R.drawable.arrow),
                         16));*/
@@ -286,38 +308,57 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
 
     @Override
     public void onLocationChanged(Location location) {
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-
-        if (location != null) {
-            if (currentLocation == null) {
-                currentLocation = new Point();
-                oldLocation = latLng;
-            }else{
-                oldLocation = new LatLng(Float.parseFloat(currentLocation.getAtitude()), Float.parseFloat(currentLocation.getLongtude()));
+        if(location != null){
+            LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+            if(getActivity() != null && lineDrawed){
+                Float distance = this.utils.meterDistanceBetweenPoints(Float.parseFloat(currentLocation.getAtitude()), Float.parseFloat(currentLocation.getLongtude()), Float.parseFloat(nearsetPoint.getAtitude()), Float.parseFloat(nearsetPoint.getLongtude()));
+                DecimalFormat df = new DecimalFormat("0.00");
+                tvDistance.setText(String.valueOf(df.format(this.nearsetPointDistance)));
+                System.out.println("distance : " + nearsetPointDistance);
+                Vibrator v = (Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE);
+// Vibrate for 500 milliseconds
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    v.vibrate(VibrationEffect.createOneShot(5000, VibrationEffect.DEFAULT_AMPLITUDE));
+                } else {
+                    //deprecated in API 26
+                    v.vibrate(5000);
+                }
             }
-            currentLocation.setAtitude(String.valueOf(location.getLatitude()));
-            currentLocation.setLongtude(String.valueOf(location.getLongitude()));
 
-            newLocaation = latLng;
-            if (currentLocationMarker == null) {
-                currentLocationMarker = mMap.addMarker(new MarkerOptions()
-                        .position(latLng)
-                        .title("موقعي")
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
+            if (location != null) {
+                if (currentLocation == null) {
+                    currentLocation = new Point();
+                    oldLocation = latLng;
+                } else {
+                    oldLocation = new LatLng(Float.parseFloat(currentLocation.getAtitude()), Float.parseFloat(currentLocation.getLongtude()));
+                }
+                currentLocation.setAtitude(String.valueOf(location.getLatitude()));
+                currentLocation.setLongtude(String.valueOf(location.getLongitude()));
 
-            } else {
-                currentLocationMarker.setPosition(latLng);
+                newLocaation = latLng;
+                if (currentLocationMarker == null) {
+                    currentLocationMarker = mMap.addMarker(new MarkerOptions()
+                            .position(latLng)
+                            .title("موقعي")
+                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
+
+                } else {
+                    currentLocationMarker.setPosition(latLng);
+                }
+                if (this.listPoints.size() > 0) {
+                    currentLocationMarker.setFlat(true);
+                    float bearing = (float) bearingBetweenLocations(oldLocation, newLocaation);
+                    rotateMarker(currentLocationMarker, bearing);
+                    if(lineDrawed){
+                        if(enableAsynDraw){
+                            this.drawPolyline(this.listPoints);
+                        }
+                    }
+                }
+
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17));
             }
-            if(this.listPoints.size() > 0){
-                currentLocationMarker.setFlat(true);
-                float bearing = (float) bearingBetweenLocations(oldLocation, newLocaation );
-                rotateMarker(currentLocationMarker, bearing);
-            }
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17));
         }
-
-
-
     }
 
     @Override
@@ -368,7 +409,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
     }
 
     private void rotateMarker(final Marker marker, final float toRotation) {
-        if(!isMarkerRotating) {
+        if (!isMarkerRotating) {
             final Handler handler = new Handler();
             final long start = SystemClock.uptimeMillis();
             final float startRotation = marker.getRotation();
@@ -386,7 +427,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
 
                     float rot = t * toRotation + (1 - t) * startRotation;
 
-                    float bearing =  -rot > 180 ? rot / 2 : rot;
+                    float bearing = -rot > 180 ? rot / 2 : rot;
 
                     marker.setRotation(bearing);
 
@@ -401,7 +442,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
         }
     }
 
-    private double bearingBetweenLocations(LatLng latLng1,LatLng latLng2) {
+    private double bearingBetweenLocations(LatLng latLng1, LatLng latLng2) {
 
         double PI = 3.14159;
         double lat1 = latLng1.latitude * PI / 180;
