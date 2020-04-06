@@ -138,34 +138,25 @@ public class MenuFragment extends Fragment implements View.OnClickListener  {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Override
     public void onClick(View view) {
-        //creating fragment object
-        System.out.println("view.getId()");
-        System.out.println(view.getId());
         android.app.Fragment fragment = null;
         switch (view.getId()){
             case R.id.tvCurrentPlace:
-                fragment = new MapFragement();
-                break;
             case R.id.imgCurrentPlace:
                 fragment = new MapFragement();
+                Bundle bundle = new Bundle();
+                bundle.putBoolean("multiRoutes", true);
+                fragment.setArguments(bundle);
                 break;
             case R.id.tvListPointsMenu:
-                fragment = new ListPoints();
-                break;
             case R.id.imgListPointsMenu:
                 fragment = new ListPoints();
                 break;
             case R.id.tvExit:
-                this.utils = new Utils(getActivity().getApplicationContext());
-                this.utils.exitApplication();
-                break;
             case R.id.imgExit:
                 this.utils = new Utils(getActivity().getApplicationContext());
                 this.utils.exitApplication();
                 break;
             case R.id.tvSaveImport:
-                fragment = new StoredPointsFragment();
-                break;
             case R.id.imgSavePoints:
                 fragment = new StoredPointsFragment();
                 break;

@@ -15,6 +15,7 @@ public class Utils {
 
     private final Context mContext;
     TextToSpeech textToSpeech;
+    private ArabicTTS tts;
 
     public Utils(Context mContext) {
         this.mContext = mContext;
@@ -26,19 +27,23 @@ public class Utils {
                 }
             }
         });
+        // Creating a new object of the ArabicTTS librrary
+        tts = new ArabicTTS();
+        // Preparing the language
+        tts.prepare(mContext);
     }
 
     public void exitApplication() {
         System.exit(1);
     }
 
-    public double meterDistanceBetweenPoints(float lat_a, float lng_a, float lat_b, float lng_b) {
+    public double meterDistanceBetweenPoints(float lat_a, float lng_a, double lat_b, double lng_b) {
         float pk = (float) (180.f / Math.PI);
 
         float a1 = lat_a / pk;
         float a2 = lng_a / pk;
-        float b1 = lat_b / pk;
-        float b2 = lng_b / pk;
+        double b1 = lat_b / pk;
+        double b2 = lng_b / pk;
 
         double t1 = Math.cos(a1) * Math.cos(a2) * Math.cos(b1) * Math.cos(b2);
         double t2 = Math.cos(a1) * Math.sin(a2) * Math.cos(b1) * Math.sin(b2);
@@ -90,6 +95,10 @@ public class Utils {
 
     public void useTextToSpeech(String message) {
         textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null);
+    }
+
+    public void useArabicTTS(String message) {
+        tts.talk(message);
     }
 
     public static ArrayList<Point> cloneList(ArrayList<Point> dogList) {

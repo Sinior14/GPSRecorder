@@ -25,6 +25,11 @@ public class Point {
         this.stat = stat;
     }
 
+    public Point( String atitude, String longtude) {
+        this.atitude = atitude;
+        this.longtude = longtude;
+    }
+
     public Point(Point point) {
         this.id = point.id;
         this.atitude = point.atitude;

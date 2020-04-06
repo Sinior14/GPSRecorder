@@ -177,6 +177,7 @@ public class ListPoints extends Fragment implements LocationListener, View.OnCli
                                 adapter = new PointsAdapter(getActivity(), pointsList);
                                 lvPoints.setAdapter(adapter);
                                 pointsBDD.close();
+                                tvDistance.setText("0");
                             }
                         })
                         .setNegativeButton("لا", null)

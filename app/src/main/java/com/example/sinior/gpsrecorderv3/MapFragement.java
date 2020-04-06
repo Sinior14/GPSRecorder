@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.nfc.Tag;
 import android.os.Build;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -51,10 +52,11 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
 
-public class MapFragement extends Fragment implements LocationListener, OnMapReadyCallback {
+public class MapFragement extends Fragment implements LocationListener, OnMapReadyCallback,
+        GoogleMap.OnInfoWindowClickListener {
     private GoogleMap mMap;
     private GpsTracker gpsTracker;
-    public static Point point;
+    public static Point point, targetPoint;
     public static Point currentLocation;
     public static boolean multiView;
     public static boolean onlyCurrentLocation;
@@ -66,6 +68,8 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
     private LatLng oldLocation, newLocaation;
     private Polyline currentLine;
     private Utils utils;
+    public ArrayList<Point> pointsList;
+    public ArrayList<Marker> markers;
 
     @Nullable
     @Override
@@ -104,13 +108,18 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
             if (getArguments() != null && getArguments().getBoolean("multiRoutes")) {
                 final PointsBDD pointsBDD = new PointsBDD(getActivity());
                 pointsBDD.open();
-                this.drawPolyline(pointsBDD.getAllPoint());
+                listPoints = pointsBDD.getAllPoint();
+                this.drawPolyline(listPoints);
                 pointsBDD.close();
             } else if (point != null) {
                 this.drawPolyline(listPoints);
             }
         } else if (itemId == R.id.optAddPoint) {
             this.addPoint();
+        } else if (itemId == R.id.optGoTo) {
+
+            this.moveToCurrentLocation(currentLocationMarker.getPosition());
+
         } else if (itemId == R.id.optSynOrNot) {
             if (!enableAsynDraw) {
                 item.setIcon(getResources().getDrawable(R.drawable.attach_green));
@@ -138,21 +147,18 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.clear();
-        /*
-        LatLng marker = new LatLng(-33.867, 151.206);
 
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(marker, 13));
-
-        googleMap.addMarker(new MarkerOptions().title("Hello Google Maps!").position(marker));
-*/
         if (mMap != null) {
             mMap.getUiSettings().setMapToolbarEnabled(true);
+            mMap.getUiSettings().setZoomControlsEnabled(true);
         }
+
         //mMap.setMyLocationEnabled(true);
-        if (getArguments() != null && getArguments().getBoolean("multiRoutes") == true) {
+        if (getArguments() != null && getArguments().getBoolean("multiRoutes")) {
             final PointsBDD pointsBDD = new PointsBDD(getActivity());
             pointsBDD.open();
-            this.showLocationsOnMap(pointsBDD.getAllPoint());
+            listPoints = pointsBDD.getAllPoint();
+            this.showLocationsOnMap(listPoints);
             pointsBDD.close();
         } else if (point != null) {
             this.addLocationsOnMap(point, false);
@@ -163,40 +169,24 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
             return;
         }
 
+
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000, 5, this);
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 3000, 5, this);
         onLocationChanged(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
+        onLocationChanged(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER));
 
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
 
             @Override
             public void onMapClick(LatLng latLng) {
-/*
-                // Creating a marker
-                MarkerOptions markerOptions = new MarkerOptions();
-
-                // Setting the position for the marker
-                markerOptions.position(latLng);
-
-                // Setting the title for the marker.
-                // This will be displayed on taping the marker
-                markerOptions.title(latLng.latitude + " : " + latLng.longitude);
-
-                // Clears the previously touched position
-                mMap.clear();
-
-                // Animating to the touched position
-                mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
-
-                // Placing a marker on the touched position
-                mMap.addMarker(markerOptions);
-                */
             }
         });
+        mMap.setOnInfoWindowClickListener(this);
     }
 
     public void getLocation() {
         if (getActivity().getApplicationContext() != null) {
-            gpsTracker = new GpsTracker(getActivity().getApplicationContext());
+            gpsTracker = new GpsTracker(getActivity());
             if (gpsTracker.canGetLocation()) {
                 Point p = new Point();
                 p.setAtitude(String.valueOf(gpsTracker.getLatitude()));
@@ -213,7 +203,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
         float latitude;
         float longitude;
         Marker marker;
-        ArrayList<Marker> markers = new ArrayList<Marker>();
+        markers = new ArrayList<Marker>();
 
         //Add markers for all locations
         for (Point point : listPoints) {
@@ -225,7 +215,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
             markers.add(mMap.addMarker(new MarkerOptions()
                     .position(latlang)
                     .title(point.getCreateDate())
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.target))));
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.flag))));
         }
     }
 
@@ -251,7 +241,9 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
             marker = mMap.addMarker(new MarkerOptions()
                     .position(latlang)
                     .title(point.getCreateDate())
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.target)));
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.flag)));
+            markers = new ArrayList<>();
+            markers.add(marker);
         }
 
 
@@ -289,15 +281,17 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
         for (int z = 0; z < listPoints.size(); z++) {
             LatLng point = new LatLng(Float.parseFloat(listPoints.get(z).getAtitude()), Float.parseFloat(listPoints.get(z).getLongtude()));
             options.add(point);
+            targetPoint = listPoints.get(z);
         }
 
 
-        if(currentLine != null){
+
+        if (currentLine != null) {
             currentLine.remove();
         }
         currentLine = mMap.addPolyline(options);
         this.lineDrawed = true;
-        this.currentLocationMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.map_navigation));
+        this.currentLocationMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.anchor));
 
 
        /* line.setEndCap(
@@ -308,24 +302,8 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
 
     @Override
     public void onLocationChanged(Location location) {
-        if(location != null){
+        if (location != null) {
             LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-            if(getActivity() != null && lineDrawed){
-                Float distance = this.utils.meterDistanceBetweenPoints(Float.parseFloat(currentLocation.getAtitude()), Float.parseFloat(currentLocation.getLongtude()), Float.parseFloat(nearsetPoint.getAtitude()), Float.parseFloat(nearsetPoint.getLongtude()));
-                DecimalFormat df = new DecimalFormat("0.00");
-                tvDistance.setText(String.valueOf(df.format(this.nearsetPointDistance)));
-                System.out.println("distance : " + nearsetPointDistance);
-                Vibrator v = (Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE);
-// Vibrate for 500 milliseconds
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    v.vibrate(VibrationEffect.createOneShot(5000, VibrationEffect.DEFAULT_AMPLITUDE));
-                } else {
-                    //deprecated in API 26
-                    v.vibrate(5000);
-                }
-            }
-
-            if (location != null) {
                 if (currentLocation == null) {
                     currentLocation = new Point();
                     oldLocation = latLng;
@@ -349,14 +327,30 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
                     currentLocationMarker.setFlat(true);
                     float bearing = (float) bearingBetweenLocations(oldLocation, newLocaation);
                     rotateMarker(currentLocationMarker, bearing);
-                    if(lineDrawed){
-                        if(enableAsynDraw){
+                    if (lineDrawed) {
+                        if (enableAsynDraw) {
                             this.drawPolyline(this.listPoints);
                         }
                     }
                 }
 
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17));
+                //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17));
+            if (getActivity() != null && lineDrawed && currentLocation != null && targetPoint != null) {
+                double distance = this.utils.meterDistanceBetweenPoints(Float.parseFloat(targetPoint.getAtitude()), Float.parseFloat(targetPoint.getLongtude()), location.getLatitude(), location.getLongitude());
+                DecimalFormat df = new DecimalFormat("0");
+                System.out.println("distance : " + df.format(distance));
+                utils.useArabicTTS("باقي ليك " +df.format(distance) + "متر");
+                if (distance <= 10) {
+                    Vibrator v = (Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE);
+                    // Vibrate for 500 milliseconds
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        v.vibrate(VibrationEffect.createOneShot(5000, VibrationEffect.DEFAULT_AMPLITUDE));
+                    } else {
+                        //deprecated in API 26
+                        v.vibrate(5000);
+                    }
+                }
+
             }
         }
     }
@@ -393,11 +387,15 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
                 p.setCreateDate(date);
                 p.setStat("true");
                 if (pointsBDD.insertPoint(p) > 0) {
-                    System.out.println("Ajouter bien fait");
                     Toast.makeText(getActivity(), "تم حفظ النقطة", Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
                 }
                 pointsBDD.close();
+                LatLng latLng = new LatLng(gpsTracker.getLatitude(), gpsTracker.getLongitude());
+                markers.add(mMap.addMarker(new MarkerOptions()
+                        .position(latLng)
+                        .title(point.getCreateDate())
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.flag))));
             } else {
                 gpsTracker.showSettingsAlert(dialog);
             }
@@ -465,4 +463,20 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
     }
 
 
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        Point pt = null;
+        for (Marker mrk : markers) {
+            if (mrk.getId().equals(marker.getId())) {
+                pt = new Point(String.valueOf(marker.getPosition().latitude), String.valueOf(marker.getPosition().longitude));
+                break;
+            }
+        }
+
+        if (pt != null) {
+            ArrayList<Point> mrkClickedList = new ArrayList<>();
+            mrkClickedList.add(pt);
+            this.drawPolyline(mrkClickedList);
+        }
+    }
 }

@@ -20,4 +20,11 @@
         android:title="@string/sync_route"
         android:icon="@drawable/attach_red"
         mayApp:showAsAction="always" />
+
+    <item
+        android:id="@+id/optGoTo"
+        mayApp:icon="@android:drawable/ic_menu_edit"
+        android:title="@string/current_location"
+        android:icon="@drawable/go_gps"
+        mayApp:showAsAction="always" />
 </menu>
