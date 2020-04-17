@@ -5,6 +5,9 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -16,6 +19,7 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -35,6 +39,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -52,7 +57,7 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
 
-public class MapFragement extends Fragment implements LocationListener, OnMapReadyCallback,
+public class MapFragement extends Fragment implements LocationListener, SensorEventListener, OnMapReadyCallback,
         GoogleMap.OnInfoWindowClickListener {
     private GoogleMap mMap;
     private GpsTracker gpsTracker;
@@ -147,13 +152,15 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.clear();
-
+        //mMap.setMyLocationEnabled(true);
         if (mMap != null) {
             mMap.getUiSettings().setMapToolbarEnabled(true);
             mMap.getUiSettings().setZoomControlsEnabled(true);
         }
 
-        //mMap.setMyLocationEnabled(true);
+
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        mMap.getUiSettings().setCompassEnabled(true);
         if (getArguments() != null && getArguments().getBoolean("multiRoutes")) {
             final PointsBDD pointsBDD = new PointsBDD(getActivity());
             pointsBDD.open();
@@ -215,7 +222,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
             markers.add(mMap.addMarker(new MarkerOptions()
                     .position(latlang)
                     .title(point.getCreateDate())
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.flag))));
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.anchor))));
         }
     }
 
@@ -241,7 +248,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
             marker = mMap.addMarker(new MarkerOptions()
                     .position(latlang)
                     .title(point.getCreateDate())
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.flag)));
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.anchor)));
             markers = new ArrayList<>();
             markers.add(marker);
         }
@@ -250,6 +257,32 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
         this.moveToCurrentLocation(latlang);
 
     }
+
+    private void updateCamera(float bearing) {
+        CameraPosition oldPos = mMap.getCameraPosition();
+
+        CameraPosition pos = CameraPosition.builder(oldPos).bearing(bearing)
+                .build();
+
+        mMap.moveCamera(CameraUpdateFactory.newCameraPosition(pos));
+
+    }
+
+    public void onSensorChanged(SensorEvent event) {
+
+        float degree = Math.round(event.values[0]);
+
+        Log.d(null, "Degree ---------- " + degree);
+
+        updateCamera(degree);
+
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
 
     private void moveToCurrentLocation(LatLng currentLocation) {
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15));
@@ -291,7 +324,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
         }
         currentLine = mMap.addPolyline(options);
         this.lineDrawed = true;
-        this.currentLocationMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.anchor));
+        this.currentLocationMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.direction));
 
 
        /* line.setEndCap(
@@ -377,7 +410,7 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
             if (gpsTracker.canGetLocation()) {
                 double latitude = gpsTracker.getLatitude();
                 double longitude = gpsTracker.getLongitude();
-                Point p = new Point();
+                Point p = currentLocation;
                 p.setLongtude(String.valueOf(longitude));
                 p.setAtitude(String.valueOf(latitude));
                 DateFormat df = new SimpleDateFormat("yyyy.MM.dd");
@@ -394,8 +427,8 @@ public class MapFragement extends Fragment implements LocationListener, OnMapRea
                 LatLng latLng = new LatLng(gpsTracker.getLatitude(), gpsTracker.getLongitude());
                 markers.add(mMap.addMarker(new MarkerOptions()
                         .position(latLng)
-                        .title(point.getCreateDate())
-                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.flag))));
+                        .title(p.getCreateDate())
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.anchor))));
             } else {
                 gpsTracker.showSettingsAlert(dialog);
             }

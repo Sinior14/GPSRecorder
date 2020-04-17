@@ -24,7 +24,7 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         getSupportActionBar().hide();
         setContentView(R.layout.activity_main2);
-        SharedPreferences sharedPref = getSharedPreferences("myStoredName", MODE_PRIVATE);
+        SharedPreferences sharedPref = getSharedPreferences("com.example.sinior.gpsrecorderv3", MODE_PRIVATE);
         String myStoredName = sharedPref.getString("myStoredName", null);
 
         if(myStoredName != null ){
@@ -45,10 +45,11 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnRegister:
-                SharedPreferences sharedPref = getSharedPreferences("myStoredName", MODE_PRIVATE);
+                SharedPreferences sharedPref = getSharedPreferences("com.example.sinior.gpsrecorderv3", MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPref.edit();
                 editor.putString("myStoredName", edName.getText().toString());
                 editor.apply();
+                editor.commit();
                 Intent myIntent = new Intent(this, MainActivity.class);
                 this.startActivity(myIntent);
                 finish();
